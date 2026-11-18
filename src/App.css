@@ -99,7 +99,6 @@
 .nav-item-active:hover {
   color: #fff;
   background: #285447;
-  box-shadow: inset 3px 0 #e5a56e;
 }
 
 .nav-item span:nth-child(2) {
@@ -1606,6 +1605,87 @@
 
 .input-with-icon input {
   padding-left: 34px;
+}
+
+.image-upload {
+  border: 1px dashed #cbd9ce;
+  border-radius: 10px;
+  background: #fbfcfb;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.image-upload.is-dragging {
+  border-color: #6f9c7d;
+  background: #f0f7f2;
+}
+
+.image-upload-input {
+  display: none;
+}
+
+.image-upload-empty {
+  display: grid;
+  min-height: 158px;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  padding: 18px;
+  color: #78877e;
+  text-align: center;
+}
+
+.image-upload-empty > svg {
+  color: #779581;
+}
+
+.image-upload-empty > strong,
+.image-upload-copy > strong {
+  color: #3c5446;
+  font-size: 12px;
+}
+
+.image-upload-empty > span,
+.image-upload-copy > span {
+  color: #8a9790;
+  font-size: 10px;
+}
+
+.image-upload-empty > small {
+  color: #96a29b;
+  font-size: 9px;
+}
+
+.image-upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+}
+
+.image-upload-preview > img {
+  width: 112px;
+  height: 94px;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  object-fit: cover;
+  background: #eef2ef;
+}
+
+.image-upload-copy {
+  display: grid;
+  gap: 7px;
+}
+
+.image-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.image-upload-actions .button {
+  min-height: 32px;
+  padding: 6px 9px;
+  font-size: 10px;
 }
 
 .toggle-stack {

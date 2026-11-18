@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { ImagePlus, Pencil, Plus, Search, UtensilsCrossed } from 'lucide-react'
 import { ApiError, api } from '../api'
 import type { Category, Product, ProductInput } from '../types'
@@ -12,6 +12,57 @@ import {
   PageHeading,
 } from '../components/ui'
 import { formatUGX } from '../utils'
+
+const MAX_SOURCE_IMAGE_BYTES = 15 * 1024 * 1024
+const MAX_STORED_IMAGE_BYTES = 1.5 * 1024 * 1024
+const MAX_IMAGE_DIMENSION = 1400
+
+async function optimizeProductImage(file: File): Promise<File> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Choose an image file.')
+  }
+  if (file.size > MAX_SOURCE_IMAGE_BYTES) {
+    throw new Error('Choose an image smaller than 15 MB.')
+  }
+
+  const objectUrl = URL.createObjectURL(file)
+  try {
+    const image = new Image()
+    image.src = objectUrl
+    try {
+      await image.decode()
+    } catch {
+      throw new Error('Could not open this image. Try a JPG, PNG, or WebP file.')
+    }
+
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_DIMENSION / Math.max(image.naturalWidth, image.naturalHeight),
+    )
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Could not process this image.')
+    context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+    for (const quality of [0.82, 0.68, 0.54]) {
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/webp', quality)
+      })
+      if (blob && blob.size <= MAX_STORED_IMAGE_BYTES) {
+        const extension =
+          blob.type === 'image/png' ? 'png' : blob.type === 'image/jpeg' ? 'jpg' : 'webp'
+        return new File([blob], `product-image.${extension}`, { type: blob.type })
+      }
+    }
+
+    throw new Error('This image is too large after optimization. Try a smaller image.')
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
 
 const blankProduct = (categoryId = 0): ProductInput => ({
   name: '',
@@ -37,6 +88,14 @@ export function ProductsPage({
   const [draft, setDraft] = useState<ProductInput>(blankProduct())
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
+  const [imageError, setImageError] = useState('')
+  const [imageProcessing, setImageProcessing] = useState(false)
+  const [imageDropActive, setImageDropActive] = useState(false)
+  const [imagePreview, setImagePreview] = useState('')
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const imageInput = useRef<HTMLInputElement>(null)
+  const imageRequestId = useRef(0)
+  const imagePreviewObjectUrl = useRef('')
   const [refreshKey, setRefreshKey] = useState(0)
   const [result, setResult] = useState<{
     key: string
@@ -49,6 +108,13 @@ export function ProductsPage({
   const categories = result?.key === requestKey ? result.categories ?? [] : []
   const loading = result?.key !== requestKey
   const error = result?.key === requestKey ? result.error ?? '' : ''
+
+  const clearLocalImagePreview = () => {
+    if (imagePreviewObjectUrl.current) {
+      URL.revokeObjectURL(imagePreviewObjectUrl.current)
+      imagePreviewObjectUrl.current = ''
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -76,13 +142,24 @@ export function ProductsPage({
   }, [token, requestKey])
 
   const openNew = () => {
+    imageRequestId.current += 1
+    setImageProcessing(false)
+    clearLocalImagePreview()
+    setImagePreview('')
+    setSelectedImage(null)
     setEditing(null)
     setDraft(blankProduct(categories[0]?.id ?? 0))
     setFormError('')
+    setImageError('')
     setModalOpen(true)
   }
 
   const openEdit = (product: Product) => {
+    imageRequestId.current += 1
+    setImageProcessing(false)
+    clearLocalImagePreview()
+    setImagePreview(product.image_url)
+    setSelectedImage(null)
     setEditing(product)
     setDraft({
       name: product.name,
@@ -95,16 +172,63 @@ export function ProductsPage({
       sort_order: product.sort_order,
     })
     setFormError('')
+    setImageError('')
     setModalOpen(true)
+  }
+
+  const selectProductImage = async (file?: File) => {
+    if (!file) return
+    const requestId = ++imageRequestId.current
+    setImageError('')
+    setImageProcessing(true)
+    try {
+      const optimizedImage = await optimizeProductImage(file)
+      if (requestId === imageRequestId.current) {
+        clearLocalImagePreview()
+        const previewUrl = URL.createObjectURL(optimizedImage)
+        imagePreviewObjectUrl.current = previewUrl
+        setImagePreview(previewUrl)
+        setSelectedImage(optimizedImage)
+      }
+    } catch (imageProcessingError) {
+      if (requestId === imageRequestId.current) {
+        setImageError(
+          imageProcessingError instanceof Error
+            ? imageProcessingError.message
+            : 'Could not process this image.',
+        )
+      }
+    } finally {
+      if (requestId === imageRequestId.current) setImageProcessing(false)
+    }
+  }
+
+  const closeEditor = () => {
+    imageRequestId.current += 1
+    setImageProcessing(false)
+    clearLocalImagePreview()
+    setImagePreview('')
+    setSelectedImage(null)
+    setModalOpen(false)
+  }
+
+  const handleImageDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setImageDropActive(false)
+    void selectProductImage(event.dataTransfer.files[0])
   }
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (imageProcessing) {
+      setFormError('Wait for the image to finish optimizing before saving.')
+      return
+    }
     setSaving(true)
     setFormError('')
     try {
-      await api.saveProduct(token, draft, editing?.id)
-      setModalOpen(false)
+      await api.saveProduct(token, draft, editing?.id, selectedImage ?? undefined)
+      closeEditor()
       setRefreshKey((value) => value + 1)
       notify(editing ? 'Menu item updated.' : 'Menu item created.')
     } catch (requestError) {
@@ -212,9 +336,88 @@ export function ProductsPage({
         <Modal
           title={editing ? 'Edit menu item' : 'Add a menu item'}
           subtitle="Changes appear on the storefront menu."
-          onClose={() => setModalOpen(false)}
+          onClose={closeEditor}
         >
           <form onSubmit={save} className="editor-form">
+            <div className="form-field product-image-field">
+              <span>Product image</span>
+              <div
+                className={`image-upload${imageDropActive ? ' is-dragging' : ''}`}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  setImageDropActive(true)
+                }}
+                onDragLeave={() => setImageDropActive(false)}
+                onDrop={handleImageDrop}
+              >
+                <input
+                  ref={imageInput}
+                  className="image-upload-input"
+                  type="file"
+                  accept="image/*"
+                  aria-label="Upload product image"
+                  onChange={(event) => {
+                    void selectProductImage(event.currentTarget.files?.[0])
+                    event.currentTarget.value = ''
+                  }}
+                />
+                {imagePreview ? (
+                  <div className="image-upload-preview">
+                    <img src={imagePreview} alt={`${draft.name || 'Product'} preview`} />
+                    <div className="image-upload-copy">
+                      <strong>
+                        {imageProcessing
+                          ? 'Optimizing image…'
+                          : selectedImage
+                            ? 'Image ready to upload to Cloudinary'
+                            : 'Image ready'}
+                      </strong>
+                      <span>Drag a replacement here or choose another image.</span>
+                      <div className="image-upload-actions">
+                        <button
+                          type="button"
+                          className="button button-outline"
+                          onClick={() => imageInput.current?.click()}
+                        >
+                          <ImagePlus size={15} /> Replace image
+                        </button>
+                        <button
+                          type="button"
+                          className="button button-outline"
+                          onClick={() => {
+                            imageRequestId.current += 1
+                            setImageProcessing(false)
+                            clearLocalImagePreview()
+                            setImagePreview('')
+                            setSelectedImage(null)
+                            setDraft((current) => ({ ...current, image_url: '' }))
+                            setImageError('')
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="image-upload-empty">
+                    <ImagePlus size={24} />
+                    <strong>{imageProcessing ? 'Optimizing image…' : 'Drop an image here'}</strong>
+                    <span>or choose a file from your device</span>
+                    <button
+                      type="button"
+                      className="button button-outline"
+                      onClick={() => imageInput.current?.click()}
+                      disabled={imageProcessing}
+                    >
+                      Browse images
+                    </button>
+                    <small>JPG, PNG, or WebP · optimized before saving</small>
+                  </div>
+                )}
+              </div>
+              {imageError && <span className="form-error" role="alert">{imageError}</span>}
+            </div>
             <FormField label="Product name">
               <input
                 autoFocus
@@ -257,17 +460,6 @@ export function ProductsPage({
                 placeholder="A short description for the menu"
               />
             </FormField>
-            <FormField label="Image URL">
-              <div className="input-with-icon">
-                <ImagePlus size={17} />
-                <input
-                  type="url"
-                  value={draft.image_url}
-                  onChange={(event) => setDraft({ ...draft, image_url: event.target.value })}
-                  placeholder="https://…"
-                />
-              </div>
-            </FormField>
             <div className="form-grid">
               <FormField label="Display order">
                 <input
@@ -298,7 +490,7 @@ export function ProductsPage({
             </div>
             {formError && <div className="form-error" role="alert">{formError}</div>}
             <FormActions
-              onCancel={() => setModalOpen(false)}
+              onCancel={closeEditor}
               saving={saving}
               submitLabel={editing ? 'Save changes' : 'Create product'}
             />

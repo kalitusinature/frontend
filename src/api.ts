@@ -59,7 +59,9 @@ async function request<T>(
 ): Promise<T> {
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
-  if (init.body) headers.set('Content-Type', 'application/json')
+  if (init.body && !(init.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json')
+  }
   if (token) headers.set('Authorization', `Token ${token}`)
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -123,11 +125,20 @@ export const api = {
   products(token: string) {
     return request<Product[]>('/staff/products/', token)
   },
-  saveProduct(token: string, input: ProductInput, id?: number) {
+  saveProduct(token: string, input: ProductInput, id?: number, imageFile?: File) {
     const path = id ? `/staff/products/${id}/` : '/staff/products/'
+    let body: BodyInit = jsonBody(input)
+    if (imageFile) {
+      const form = new FormData()
+      Object.entries(input).forEach(([key, value]) => {
+        form.append(key, String(value))
+      })
+      form.append('image_file', imageFile)
+      body = form
+    }
     return request<Product>(path, token, {
       method: id ? 'PATCH' : 'POST',
-      body: jsonBody(input),
+      body,
     })
   },
   categories(token: string) {

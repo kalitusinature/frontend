@@ -33,9 +33,13 @@ session token is stored in `sessionStorage` and is cleared on sign-out.
 
 - Dashboard with order and reservation totals and recent activity.
 - Orders: search, filter, confirm, progress, and record payment at the resort.
-- Menu products: create and edit products, pricing, categories, images, and visibility.
+- Menu products: create and edit products, pricing, categories, uploaded images, and visibility.
 - Reservations: review, confirm, or decline lodge and cottage requests.
 - Categories and lodges/cottages: create and edit public menu and stay inventory.
 
 Only active Django staff users can obtain an API token. No credential or token
 is compiled into the public GitHub Pages bundle.
+
+Product image uploads are sent to the Django staff API and stored in Cloudinary.
+Configure `CLOUDINARY_NAME`, `CLOUDINARY_KEY`, and `CLOUDINARY_SECRET` on the
+backend; the Cloudinary secret is never sent to the browser.
