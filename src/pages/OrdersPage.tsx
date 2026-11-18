@@ -197,6 +197,7 @@ export function OrdersPage({
                     <td>
                       <div className="order-table-cell">
                         <strong>{order.guest_name}</strong>
+                        {order.email && <a href={`mailto:${order.email}`}>{order.email}</a>}
                         <a href={`tel:${order.phone}`}>{order.phone}</a>
                       </div>
                     </td>
@@ -296,6 +297,14 @@ export function OrdersPage({
             <div className="order-detail-field">
               <span>Guest</span>
               <strong>{selectedOrder.guest_name}</strong>
+            </div>
+            <div className="order-detail-field">
+              <span>Email</span>
+              {selectedOrder.email ? (
+                <a href={`mailto:${selectedOrder.email}`}>{selectedOrder.email}</a>
+              ) : (
+                <strong>Not provided</strong>
+              )}
             </div>
             <div className="order-detail-field">
               <span>Phone</span>

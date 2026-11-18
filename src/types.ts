@@ -63,6 +63,7 @@ export interface Order {
   location: string
   guest_name: string
   phone: string
+  email: string
   payment_method: 'cash' | 'card_at_counter'
   payment_status: 'unpaid' | 'paid'
   note: string
