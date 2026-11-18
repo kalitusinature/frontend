@@ -19,6 +19,7 @@ import { ProductsPage } from './pages/ProductsPage'
 import { ReservationsPage } from './pages/ReservationsPage'
 import { LoginPage } from './pages/LoginPage'
 import type { LoginResponse } from './types'
+import { InstallAppButton } from './components/InstallAppButton'
 import './App.css'
 
 export type PageId =
@@ -202,6 +203,7 @@ function App() {
             <strong>{titleForPage(activePage)}</strong>
           </div>
           <div className="topbar-right">
+            <InstallAppButton />
             <span className="today-label">{todayLabel}</span>
             <button className="user-chip" onClick={() => void handleLogout()}>
               <span className="avatar avatar-small">

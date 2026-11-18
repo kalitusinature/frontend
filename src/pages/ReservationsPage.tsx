@@ -85,19 +85,20 @@ export function ReservationsPage({
         title="Reservations"
         description="Review lodge and cottage requests, then confirm availability."
       />
-      <div className="toolbar">
-        <div className="filter-control">
-          <BedDouble size={16} />
-          <select
-            aria-label="Filter reservations by status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as ReservationStatus | 'all')}
+      <div className="status-tabs" role="group" aria-label="Filter reservations by status">
+        {filters.map((filter) => (
+          <button
+            type="button"
+            className="status-tab"
+            aria-pressed={status === filter.value}
+            key={filter.value}
+            onClick={() => setStatus(filter.value)}
           >
-            {filters.map((filter) => (
-              <option key={filter.value} value={filter.value}>{filter.label}</option>
-            ))}
-          </select>
-        </div>
+            {filter.label}
+          </button>
+        ))}
+      </div>
+      <div className="toolbar">
         <span className="toolbar-count">{reservations.length} requests</span>
       </div>
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}

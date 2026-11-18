@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  color: #23332f;
-  background: #f5f7f4;
+  color: #1d3129;
+  background: #f3f6f2;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -9,18 +9,18 @@
   font-optical-sizing: auto;
   font-weight: 400;
 
-  --forest: #173c34;
-  --forest-deep: #102f29;
-  --forest-soft: #e7f0ec;
-  --ink: #263832;
-  --muted: #82908a;
-  --line: #e8ede9;
+  --forest: #166534;
+  --forest-deep: #0b2113;
+  --forest-soft: #eaf5e9;
+  --ink: #111811;
+  --muted: #737d74;
+  --line: #e4e9e1;
   --surface: #ffffff;
-  --page: #f5f7f4;
-  --orange: #d98a50;
-  --green: #2e8a68;
+  --page: #f6f8f3;
+  --orange: #eab308;
+  --green: #16803c;
   --red: #b94a45;
-  --shadow: 0 8px 26px rgba(27, 54, 44, 0.055);
+  --shadow: 0 14px 36px rgba(20, 44, 24, 0.08);
 }
 
 * {
@@ -55,7 +55,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(217, 138, 80, 0.4);
+  outline: 3px solid rgba(234, 179, 8, 0.45);
   outline-offset: 2px;
 }
 

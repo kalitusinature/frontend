@@ -15,6 +15,14 @@ copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL`. This URL is
 public configuration; never put staff passwords or API tokens in a Vite
 environment file.
 
+## Install on mobile
+
+Deploy the app over HTTPS, then open it in a mobile browser. Android browsers
+show an **Install app** action when the app is eligible; on iPhone or iPad, open
+the app in Safari, tap **Share**, and choose **Add to Home Screen**. The app
+shell and static assets are available offline after the first visit, but staff
+sign-in and resort data still require a connection to the API.
+
 ## GitHub Pages deployment
 
 The `frontend` repository is configured to build and deploy from the `main`

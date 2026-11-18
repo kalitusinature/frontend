@@ -10,7 +10,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react'
 import { api } from '../api'
-import type { DashboardData } from '../types'
+import type { DashboardData, OrderStatus } from '../types'
 import {
   EmptyState,
   ErrorState,
@@ -20,6 +20,15 @@ import {
 } from '../components/ui'
 import type { PageId } from '../App'
 import { formatDateTime, formatUGX } from '../utils'
+
+const orderFlowStatuses: { status: OrderStatus; label: string }[] = [
+  { status: 'new', label: 'New' },
+  { status: 'accepted', label: 'Accepted' },
+  { status: 'preparing', label: 'Preparing' },
+  { status: 'ready', label: 'Ready' },
+  { status: 'completed', label: 'Completed' },
+  { status: 'cancelled', label: 'Cancelled' },
+]
 
 export function DashboardPage({
   token,
@@ -38,6 +47,16 @@ export function DashboardPage({
   const data = result?.key === requestKey ? result.data ?? null : null
   const error = result?.key === requestKey ? result.error ?? '' : ''
   const loading = result?.key !== requestKey
+  const orderFlow = data
+    ? orderFlowStatuses.flatMap(({ status, label }) => {
+        const count = data.orders_by_status[status] ?? 0
+        if (!count) return []
+        const width = data.orders_total
+          ? Math.max((count / data.orders_total) * 100, 5)
+          : 0
+        return [{ status, label, count, width }]
+      })
+    : []
 
   useEffect(() => {
     let active = true
@@ -62,17 +81,19 @@ export function DashboardPage({
 
   return (
     <>
-      <PageHeading
-        eyebrow="OVERVIEW"
-        title="A good day starts here."
-        description="A live snapshot of food orders, menu items, and guest stays."
-        action={
-          <button className="button button-outline" onClick={load} disabled={loading}>
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
-            Refresh
-          </button>
-        }
-      />
+      <div className="dashboard-heading-wrap">
+        <PageHeading
+          eyebrow="OVERVIEW"
+          title="A good day starts here."
+          description="A live snapshot of food orders, menu items, and guest stays."
+          action={
+            <button className="button button-outline" onClick={load} disabled={loading}>
+              <RefreshCw size={16} className={loading ? 'spin' : ''} />
+              Refresh
+            </button>
+          }
+        />
+      </div>
       {error && <ErrorState message={error} retry={load} />}
       {loading && !data ? (
         <LoadingState label="Gathering your resort overview…" />
@@ -124,23 +145,9 @@ export function DashboardPage({
                   View orders <ArrowRight size={15} />
                 </button>
               </div>
-              <div className="order-flow-list">
-                {[
-                  ['new', 'New'],
-                  ['accepted', 'Accepted'],
-                  ['preparing', 'Preparing'],
-                  ['ready', 'Ready'],
-                  ['completed', 'Completed'],
-                  ['cancelled', 'Cancelled'],
-                ].map(([status, label]) => {
-                  const count =
-                    data.orders_by_status[
-                      status as keyof DashboardData['orders_by_status']
-                    ] ?? 0
-                  const width = data.orders_total
-                    ? Math.max((count / data.orders_total) * 100, count ? 5 : 0)
-                    : 0
-                  return (
+              {orderFlow.length ? (
+                <div className="order-flow-list">
+                  {orderFlow.map(({ status, label, count, width }) => (
                     <div className="flow-row" key={status}>
                       <span>{label}</span>
                       <div className="flow-track">
@@ -151,9 +158,14 @@ export function DashboardPage({
                       </div>
                       <strong>{count}</strong>
                     </div>
-                  )
-                })}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No orders yet"
+                  description="Order activity will appear here when guests place an order."
+                />
+              )}
               <div className="flow-footnote">
                 <ArrowDownRight size={15} />
                 <span>Keep new orders moving so guests aren’t waiting.</span>
@@ -176,13 +188,21 @@ export function DashboardPage({
               <QuickLink
                 icon={<CircleCheck size={18} />}
                 title="Review incoming orders"
-                detail={`${data.new_orders} waiting for confirmation`}
+                detail={
+                  data.new_orders
+                    ? `${data.new_orders} waiting for confirmation`
+                    : 'No orders awaiting confirmation'
+                }
                 onClick={() => onNavigate('orders')}
               />
               <QuickLink
                 icon={<BedDouble size={18} />}
                 title="Review reservations"
-                detail={`${data.pending_reservations} awaiting approval`}
+                detail={
+                  data.pending_reservations
+                    ? `${data.pending_reservations} awaiting approval`
+                    : 'No stays awaiting approval'
+                }
                 onClick={() => onNavigate('reservations')}
               />
             </section>
