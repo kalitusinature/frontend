@@ -49,8 +49,14 @@ self.addEventListener('fetch', (event) => {
 
   if (['script', 'style', 'image', 'font'].includes(request.destination)) {
     const cachedResponsePromise = caches.match(request)
+    let responseToCache
     const networkResponsePromise = cachedResponsePromise.then((cachedResponse) =>
-      cachedResponse ? undefined : fetch(request),
+      cachedResponse
+        ? undefined
+        : fetch(request).then((response) => {
+            if (response.ok) responseToCache = response.clone()
+            return response
+          }),
     )
 
     event.respondWith(
@@ -59,10 +65,15 @@ self.addEventListener('fetch', (event) => {
       ),
     )
     event.waitUntil(
-      networkResponsePromise.then((response) => {
-        if (!response || !response.ok) return
-        return caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()))
-      }),
+      networkResponsePromise.then(
+        () =>
+          responseToCache
+            ? caches
+                .open(CACHE_NAME)
+                .then((cache) => cache.put(request, responseToCache))
+            : undefined,
+        () => undefined,
+      ),
     )
   }
 })
