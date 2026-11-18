@@ -17,13 +17,12 @@ environment file.
 
 ## GitHub Pages deployment
 
-The `kalitusi-admin-portal` repository is configured to build and deploy from
-the `main` branch with GitHub Actions. Create a public repository with that
-name under `kalitusinature`, push this project to it, then in repository
-**Settings → Pages**, choose **GitHub Actions** as the build and deployment
-source. Successful deployments will be available at:
+The `frontend` repository is configured to build and deploy from the `main`
+branch with GitHub Actions. In repository **Settings → Pages**, choose
+**GitHub Actions** as the build and deployment source. Successful deployments
+will be available at:
 
-`https://kalitusinature.github.io/kalitusi-admin-portal/`
+`https://kalitusinature.github.io/frontend/`
 
 The app calls `https://backend-bte7.onrender.com/api/v1` and signs staff in
 through Django token authentication. The backend must include
