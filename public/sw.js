@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kalitusi-admin-v2'
+const CACHE_NAME = 'kalitusi-admin-v3'
 const APP_SHELL = self.registration.scope
 const scopedUrl = (path) => new URL(path, self.registration.scope).href
 
@@ -10,7 +10,6 @@ self.addEventListener('install', (event) => {
         cache.addAll([
           APP_SHELL,
           scopedUrl('manifest.webmanifest'),
-          scopedUrl('favicon.svg'),
           scopedUrl('icons/icon-180.png'),
           scopedUrl('icons/icon-192.png'),
           scopedUrl('icons/icon-512.png'),
@@ -43,7 +42,7 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match(APP_SHELL)),
+      fetch(request, { cache: 'no-cache' }).catch(() => caches.match(APP_SHELL)),
     )
     return
   }
