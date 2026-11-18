@@ -53,6 +53,10 @@ export function OrdersPage({
 
   useEffect(() => {
     let active = true
+    const refreshTimer = window.setInterval(() => {
+      setRefreshKey((value) => value + 1)
+    }, 30_000)
+
     api.orders(token, status, searchTerm)
       .then((result) => {
         if (active) setResult({ key: requestKey, orders: result })
@@ -67,6 +71,7 @@ export function OrdersPage({
       })
     return () => {
       active = false
+      window.clearInterval(refreshTimer)
     }
   }, [token, status, searchTerm, refreshKey, requestKey])
 

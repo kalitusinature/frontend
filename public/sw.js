@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kalitusi-admin-v1'
+const CACHE_NAME = 'kalitusi-admin-v2'
 const APP_SHELL = self.registration.scope
 const scopedUrl = (path) => new URL(path, self.registration.scope).href
 

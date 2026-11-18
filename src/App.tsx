@@ -137,7 +137,12 @@ function App() {
       )}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="brand-lockup">
-          <div className="brand-mark">K</div>
+          <div className="brand-mark">
+            <img
+              src={`${import.meta.env.BASE_URL}Kalitusi_Nature_Resort_Sunset_Logo.png`}
+              alt=""
+            />
+          </div>
           <div>
             <strong>Kalitusi</strong>
             <span>RESORT OPERATIONS</span>
@@ -170,13 +175,6 @@ function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="sidebar-help">
-            <span className="help-dot" />
-            <div>
-              <strong>Backend connected</strong>
-              <span>Render API · secure</span>
-            </div>
-          </div>
           <button className="profile-button" onClick={handleLogout}>
             <span className="avatar">{username.slice(0, 1).toUpperCase() || 'A'}</span>
             <span className="profile-copy">
