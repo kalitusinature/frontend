@@ -6,6 +6,7 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  Modal,
   PageHeading,
   StatusPill,
 } from '../components/ui'
@@ -14,10 +15,10 @@ import { formatDateTime, formatUGX } from '../utils'
 const orderStatuses: { value: OrderStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All orders' },
   { value: 'new', label: 'New' },
-  { value: 'accepted', label: 'Accepted' },
+  { value: 'accepted', label: 'Confirmed' },
   { value: 'preparing', label: 'Preparing' },
   { value: 'ready', label: 'Ready' },
-  { value: 'completed', label: 'Completed' },
+  { value: 'completed', label: 'Delivered' },
   { value: 'cancelled', label: 'Cancelled' },
 ]
 
@@ -25,7 +26,16 @@ const nextOrderStatus: Partial<Record<OrderStatus, { status: OrderStatus; label:
   new: { status: 'accepted', label: 'Confirm order' },
   accepted: { status: 'preparing', label: 'Start preparing' },
   preparing: { status: 'ready', label: 'Mark ready' },
-  ready: { status: 'completed', label: 'Complete order' },
+  ready: { status: 'completed', label: 'Mark delivered' },
+}
+
+const orderStatusLabels: Record<OrderStatus, string> = {
+  new: 'New',
+  accepted: 'Confirmed',
+  preparing: 'Preparing',
+  ready: 'Ready',
+  completed: 'Delivered',
+  cancelled: 'Cancelled',
 }
 
 export function OrdersPage({
@@ -39,6 +49,7 @@ export function OrdersPage({
   const [searchInput, setSearchInput] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [workingId, setWorkingId] = useState<number | null>(null)
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
   const [result, setResult] = useState<{
@@ -48,6 +59,7 @@ export function OrdersPage({
   } | null>(null)
   const requestKey = `${token}:${status}:${searchTerm}:${refreshKey}`
   const orders = result?.key === requestKey ? result.orders ?? [] : []
+  const selectedOrder = result?.orders?.find((order) => order.id === selectedOrderId)
   const loading = result?.key !== requestKey
   const error = actionError || (result?.key === requestKey ? result.error ?? '' : '')
 
@@ -105,6 +117,12 @@ export function OrdersPage({
     }
   }
 
+  const cancelOrder = (order: Order) => {
+    if (window.confirm(`Cancel order ${order.number}?`)) {
+      void updateOrder(order, { status: 'cancelled' })
+    }
+  }
+
   return (
     <>
       <PageHeading
@@ -159,14 +177,19 @@ export function OrdersPage({
             </thead>
             <tbody>
               {orders.map((order) => {
-                const next = nextOrderStatus[order.status]
                 return (
                   <tr key={order.id}>
                     <td>
                       <div className="order-id-group">
                         <span className="order-icon"><UtensilsCrossed size={17} /></span>
                         <div>
-                          <strong>{order.number}</strong>
+                          <button
+                            type="button"
+                            className="order-number-link"
+                            onClick={() => setSelectedOrderId(order.id)}
+                          >
+                            {order.number}
+                          </button>
                           <small>{formatDateTime(order.created_at)}</small>
                         </div>
                       </div>
@@ -204,49 +227,42 @@ export function OrdersPage({
                         <span>
                           {order.payment_method === 'cash' ? 'Cash at resort' : 'Card at counter'}
                         </span>
-                        <button
-                          className={`payment-link ${order.payment_status === 'paid' ? 'payment-paid' : ''}`}
-                          disabled={workingId === order.id}
-                          onClick={() =>
-                            void updateOrder(order, {
-                              payment_status: order.payment_status === 'paid' ? 'unpaid' : 'paid',
-                            })
-                          }
-                        >
-                          {order.payment_status === 'paid' ? 'Paid · mark unpaid' : 'Unpaid · mark paid'}
-                        </button>
+                        {order.payment_status === 'paid' ? (
+                          <span className="payment-link payment-paid">Paid</span>
+                        ) : order.status === 'cancelled' ? (
+                          <span className="payment-link">Unpaid</span>
+                        ) : (
+                          <button
+                            className="payment-link"
+                            type="button"
+                            disabled={workingId === order.id}
+                            aria-label={`Mark ${order.number} paid`}
+                            onClick={() =>
+                              void updateOrder(order, { payment_status: 'paid' })
+                            }
+                          >
+                            Unpaid · mark paid
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="table-price">{formatUGX(order.total_ugx)}</td>
-                    <td><StatusPill status={order.status} /></td>
+                    <td>
+                      <StatusPill
+                        status={order.status}
+                        label={orderStatusLabels[order.status]}
+                      />
+                    </td>
                     <td className="order-table-actions">
                       <div className="order-actions">
-                        <label className="sr-only" htmlFor={`order-status-${order.id}`}>
-                          Update {order.number} status
-                        </label>
-                        <select
-                          id={`order-status-${order.id}`}
-                          className="status-select"
-                          value={order.status}
+                        <button
+                          type="button"
+                          className="button button-outline button-small"
                           disabled={workingId === order.id}
-                          onChange={(event) =>
-                            void updateOrder(order, { status: event.target.value as OrderStatus })
-                          }
+                          onClick={() => setSelectedOrderId(order.id)}
                         >
-                          {orderStatuses.slice(1).map((item) => (
-                            <option value={item.value} key={item.value}>{item.label}</option>
-                          ))}
-                        </select>
-                        {next && (
-                          <button
-                            className="button button-primary button-small"
-                            disabled={workingId === order.id}
-                            onClick={() => void updateOrder(order, { status: next.status })}
-                          >
-                            <Check size={15} />
-                            {workingId === order.id ? 'Saving…' : next.label}
-                          </button>
-                        )}
+                          View order
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -262,6 +278,105 @@ export function OrdersPage({
             description={searchTerm ? 'Try another search or clear the filter.' : 'New orders will appear here as guests place them.'}
           />
         </div>
+      )}
+      {selectedOrder && (
+        <Modal
+          title={selectedOrder.number}
+          subtitle={`Placed ${formatDateTime(selectedOrder.created_at)}`}
+          onClose={() => setSelectedOrderId(null)}
+        >
+          <div className="order-detail-summary">
+            <StatusPill
+              status={selectedOrder.status}
+              label={orderStatusLabels[selectedOrder.status]}
+            />
+            <strong>{formatUGX(selectedOrder.total_ugx)}</strong>
+          </div>
+          <div className="order-detail-grid">
+            <div className="order-detail-field">
+              <span>Guest</span>
+              <strong>{selectedOrder.guest_name}</strong>
+            </div>
+            <div className="order-detail-field">
+              <span>Phone</span>
+              <a href={`tel:${selectedOrder.phone}`}>{selectedOrder.phone}</a>
+            </div>
+            <div className="order-detail-field">
+              <span>Service</span>
+              <strong>
+                {selectedOrder.order_type === 'dine_in' ? 'Dine in' : 'Lodge / cottage'}
+              </strong>
+            </div>
+            <div className="order-detail-field">
+              <span>Location</span>
+              <strong>{selectedOrder.location}</strong>
+            </div>
+            <div className="order-detail-field">
+              <span>Payment method</span>
+              <strong>
+                {selectedOrder.payment_method === 'cash' ? 'Cash at resort' : 'Card at counter'}
+              </strong>
+            </div>
+            <div className="order-detail-field">
+              <span>Payment status</span>
+              <strong>{selectedOrder.payment_status === 'paid' ? 'Paid' : 'Unpaid'}</strong>
+            </div>
+          </div>
+          <div className="order-detail-lines">
+            <h3>Items</h3>
+            {selectedOrder.items.map((item) => (
+              <div className="order-detail-line" key={item.id}>
+                <span>{item.quantity} × {item.product_name}</span>
+                <strong>{formatUGX(item.line_total_ugx)}</strong>
+              </div>
+            ))}
+          </div>
+          {selectedOrder.note && (
+            <p className="order-detail-note"><strong>Guest note:</strong> {selectedOrder.note}</p>
+          )}
+          <div className="order-detail-actions">
+            {nextOrderStatus[selectedOrder.status] && (
+              <button
+                type="button"
+                className="button button-primary"
+                disabled={workingId === selectedOrder.id}
+                onClick={() =>
+                  void updateOrder(selectedOrder, {
+                    status: nextOrderStatus[selectedOrder.status]!.status,
+                  })
+                }
+              >
+                <Check size={16} />
+                {workingId === selectedOrder.id
+                  ? 'Saving…'
+                  : nextOrderStatus[selectedOrder.status]!.label}
+              </button>
+            )}
+            {selectedOrder.payment_status === 'unpaid' &&
+              selectedOrder.status !== 'cancelled' && (
+              <button
+                type="button"
+                className="button button-outline"
+                disabled={workingId === selectedOrder.id}
+                onClick={() =>
+                  void updateOrder(selectedOrder, { payment_status: 'paid' })
+                }
+              >
+                Mark paid
+              </button>
+            )}
+            {!['completed', 'cancelled'].includes(selectedOrder.status) && (
+              <button
+                type="button"
+                className="button button-outline order-cancel-button"
+                disabled={workingId === selectedOrder.id}
+                onClick={() => cancelOrder(selectedOrder)}
+              >
+                Cancel order
+              </button>
+            )}
+          </div>
+        </Modal>
       )}
     </>
   )

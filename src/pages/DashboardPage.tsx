@@ -23,10 +23,10 @@ import { formatDateTime, formatUGX } from '../utils'
 
 const orderFlowStatuses: { status: OrderStatus; label: string }[] = [
   { status: 'new', label: 'New' },
-  { status: 'accepted', label: 'Accepted' },
+  { status: 'accepted', label: 'Confirmed' },
   { status: 'preparing', label: 'Preparing' },
   { status: 'ready', label: 'Ready' },
-  { status: 'completed', label: 'Completed' },
+  { status: 'completed', label: 'Delivered' },
   { status: 'cancelled', label: 'Cancelled' },
 ]
 
@@ -233,7 +233,16 @@ export function DashboardPage({
                         <small>{order.guest_name} · {formatDateTime(order.created_at)}</small>
                       </span>
                       <span className="compact-total">{formatUGX(order.total_ugx)}</span>
-                      <StatusPill status={order.status} />
+                      <StatusPill
+                        status={order.status}
+                        label={
+                          order.status === 'completed'
+                            ? 'Delivered'
+                            : order.status === 'accepted'
+                              ? 'Confirmed'
+                              : undefined
+                        }
+                      />
                     </button>
                   ))}
                 </div>

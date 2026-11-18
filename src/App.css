@@ -901,6 +901,22 @@
   font-size: 12px;
 }
 
+.order-number-link {
+  padding: 0;
+  border: 0;
+  color: #30433a;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.order-number-link:hover {
+  color: #6a8a73;
+  text-decoration: underline;
+}
+
 .order-id-group small {
   color: #99a39e;
   font-size: 10px;
@@ -1628,10 +1644,111 @@
   line-height: 1.5;
 }
 
+.order-detail-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.order-detail-summary > strong {
+  color: #30453a;
+  font-size: 17px;
+}
+
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #eff2f0;
+}
+
+.order-detail-field {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.order-detail-field > span {
+  color: #89968f;
+  font-size: 10px;
+}
+
+.order-detail-field > strong,
+.order-detail-field > a {
+  overflow-wrap: anywhere;
+  color: #41534a;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.order-detail-lines {
+  margin-top: 16px;
+}
+
+.order-detail-lines h3 {
+  margin: 0 0 8px;
+  color: #41534a;
+  font-size: 12px;
+}
+
+.order-detail-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eff2f0;
+  color: #67766f;
+  font-size: 11px;
+}
+
+.order-detail-line strong {
+  color: #41534a;
+  white-space: nowrap;
+}
+
+.order-detail-note {
+  margin: 13px 0 0;
+  color: #8c7657;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.order-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.order-cancel-button {
+  color: #a64b46;
+}
+
+.order-cancel-button:hover:not(:disabled) {
+  border-color: #e2b6b3;
+  color: #913b36;
+  background: #fff7f6;
+}
+
 .editor-form,
 .login-form {
   display: grid;
   gap: 14px;
+}
+
+@media (max-width: 520px) {
+  .order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .order-detail-actions > .button {
+    flex: 1 1 100%;
+  }
 }
 
 .form-field {

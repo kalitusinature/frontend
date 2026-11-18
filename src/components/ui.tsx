@@ -69,10 +69,16 @@ export function EmptyState({
   )
 }
 
-export function StatusPill({ status }: { status: string }) {
+export function StatusPill({
+  status,
+  label,
+}: {
+  status: string
+  label?: string
+}) {
   return (
     <span className={`status-pill status-${status.replaceAll('_', '-')}`}>
-      {status.replaceAll('_', ' ')}
+      {label ?? status.replaceAll('_', ' ')}
     </span>
   )
 }
