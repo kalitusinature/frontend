@@ -11,6 +11,9 @@ export type ReservationStatus =
   | 'confirmed'
   | 'declined'
   | 'cancelled'
+  | 'completed'
+
+export type ReservationSource = 'website' | 'walk_in' | 'phone' | 'staff'
 
 export interface Category {
   id: number
@@ -43,6 +46,11 @@ export interface Lodge {
   slug: string
   description: string
   capacity: number
+  min_nights: number
+  max_nights: number
+  min_advance_days: number
+  max_advance_days: number
+  checkin_weekdays: number[]
   image_url: string
   is_active: boolean
 }
@@ -86,7 +94,43 @@ export interface Reservation {
   adults: number
   children: number
   note: string
+  occasion: string
+  source: ReservationSource
   created_at: string
+  updated_at: string
+}
+
+export type ReservationInput = Pick<
+  Reservation,
+  | 'status'
+  | 'source'
+  | 'lodge'
+  | 'guest_name'
+  | 'email'
+  | 'phone'
+  | 'check_in'
+  | 'check_out'
+  | 'adults'
+  | 'children'
+  | 'note'
+  | 'occasion'
+>
+
+export interface LodgeBlockout {
+  id: number
+  lodge: number
+  lodge_name: string
+  start_date: string
+  end_date: string
+  reason: string
+  created_at: string
+}
+
+export interface Paginated<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
 }
 
 export interface DashboardData {
@@ -94,12 +138,16 @@ export interface DashboardData {
   orders_by_status: Partial<Record<OrderStatus, number>>
   new_orders: number
   pending_reservations: number
+  reservations_total: number
+  reservations_by_status: Partial<Record<ReservationStatus, number>>
   products_total: number
   categories_total: number
   lodges_total: number
   recent_orders: Order[]
   recent_reservations: Reservation[]
 }
+
+export type LodgeInput = Omit<Lodge, 'id' | 'slug'>
 
 export interface LoginResponse {
   token: string
@@ -112,5 +160,3 @@ export type ProductInput = Omit<
 >
 
 export type CategoryInput = Omit<Category, 'id' | 'slug'>
-
-export type LodgeInput = Omit<Lodge, 'id' | 'slug'>

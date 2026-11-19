@@ -2,15 +2,18 @@ import type {
   Category,
   CategoryInput,
   DashboardData,
+  LodgeBlockout,
   Lodge,
   LodgeInput,
   LoginResponse,
   Order,
   OrderStatus,
+  Paginated,
   Product,
   ProductInput,
   Reservation,
-  ReservationStatus,
+  ReservationInput,
+  ReservationSource,
 } from './types'
 
 const API_BASE_URL = (
@@ -131,7 +134,11 @@ export const api = {
     if (imageFile) {
       const form = new FormData()
       Object.entries(input).forEach(([key, value]) => {
-        form.append(key, String(value))
+        if (Array.isArray(value)) {
+          value.forEach((item) => form.append(key, String(item)))
+        } else {
+          form.append(key, String(value))
+        }
       })
       form.append('image_file', imageFile)
       body = form
@@ -154,24 +161,85 @@ export const api = {
   lodges(token: string) {
     return request<Lodge[]>('/staff/lodges/', token)
   },
-  saveLodge(token: string, input: LodgeInput, id?: number) {
+  saveLodge(token: string, input: LodgeInput, id?: number, imageFile?: File) {
     const path = id ? `/staff/lodges/${id}/` : '/staff/lodges/'
+    let body: BodyInit = jsonBody(input)
+    if (imageFile) {
+      const form = new FormData()
+      Object.entries(input).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((item) => form.append(key, String(item)))
+        } else {
+          form.append(key, String(value))
+        }
+      })
+      form.append('image_file', imageFile)
+      body = form
+    }
     return request<Lodge>(path, token, {
+      method: id ? 'PATCH' : 'POST',
+      body,
+    })
+  },
+  reservations(
+    token: string,
+    filters: {
+      status?: string
+      query?: string
+      source?: ReservationSource | 'all'
+      lodge?: number | 'all'
+      startDate?: string
+      endDate?: string
+      page?: number
+      ordering?: 'check_in' | '-check_in' | 'created_at' | '-created_at'
+    } = {},
+  ) {
+    const params = new URLSearchParams()
+    if (filters.status && filters.status !== 'all') params.set('status', filters.status)
+    if (filters.query) params.set('q', filters.query)
+    if (filters.source && filters.source !== 'all') params.set('source', filters.source)
+    if (filters.lodge && filters.lodge !== 'all') params.set('lodge', String(filters.lodge))
+    if (filters.startDate) params.set('start_date', filters.startDate)
+    if (filters.endDate) params.set('end_date', filters.endDate)
+    if (filters.page) params.set('page', String(filters.page))
+    if (filters.ordering) params.set('ordering', filters.ordering)
+    const suffix = params.size ? `?${params.toString()}` : ''
+    return request<Paginated<Reservation>>(`/staff/reservations/${suffix}`, token)
+  },
+  calendarReservations(token: string, start: string, end: string) {
+    const params = new URLSearchParams({ start, end })
+    return request<Reservation[]>(`/staff/reservations/calendar/?${params}`, token)
+  },
+  createReservation(token: string, input: ReservationInput) {
+    return request<Reservation>('/staff/reservations/', token, {
+      method: 'POST',
+      body: jsonBody(input),
+    })
+  },
+  updateReservation(token: string, id: number, updates: Partial<ReservationInput>) {
+    return request<Reservation>(`/staff/reservations/${id}/`, token, {
+      method: 'PATCH',
+      body: jsonBody(updates),
+    })
+  },
+  deleteReservation(token: string, id: number) {
+    return request<void>(`/staff/reservations/${id}/`, token, { method: 'DELETE' })
+  },
+  lodgeBlockouts(token: string) {
+    return request<LodgeBlockout[]>('/staff/lodge-blockouts/', token)
+  },
+  saveLodgeBlockout(
+    token: string,
+    input: Pick<LodgeBlockout, 'lodge' | 'start_date' | 'end_date' | 'reason'>,
+    id?: number,
+  ) {
+    const path = id ? `/staff/lodge-blockouts/${id}/` : '/staff/lodge-blockouts/'
+    return request<LodgeBlockout>(path, token, {
       method: id ? 'PATCH' : 'POST',
       body: jsonBody(input),
     })
   },
-  reservations(token: string, status?: string) {
-    const suffix =
-      status && status !== 'all'
-        ? `?status=${encodeURIComponent(status)}`
-        : ''
-    return request<Reservation[]>(`/staff/reservations/${suffix}`, token)
-  },
-  updateReservation(token: string, id: number, status: ReservationStatus) {
-    return request<Pick<Reservation, 'status'>>(`/staff/reservations/${id}/`, token, {
-      method: 'PATCH',
-      body: jsonBody({ status }),
-    })
+  deleteLodgeBlockout(token: string, id: number) {
+    return request<void>(`/staff/lodge-blockouts/${id}/`, token, { method: 'DELETE' })
   },
 }
