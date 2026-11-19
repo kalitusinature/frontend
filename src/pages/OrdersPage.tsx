@@ -7,7 +7,6 @@ import {
   ErrorState,
   LoadingState,
   Modal,
-  PageHeading,
   StatusPill,
 } from '../components/ui'
 import { formatDateTime, formatUGX } from '../utils'
@@ -124,12 +123,7 @@ export function OrdersPage({
   }
 
   return (
-    <>
-      <PageHeading
-        eyebrow="FOOD SERVICE"
-        title="Orders"
-        description="Review guest orders and move each one through service."
-      />
+    <div className="orders-page">
       <div className="status-tabs" role="group" aria-label="Filter orders by status">
         {orderStatuses.map((item) => (
           <button
@@ -161,8 +155,9 @@ export function OrdersPage({
       {loading ? (
         <LoadingState label="Loading guest orders…" />
       ) : orders.length ? (
-        <div className="table-wrap">
-          <table className="data-table orders-table">
+        <>
+          <div className="table-wrap orders-desktop-table">
+            <table className="data-table orders-table">
             <thead>
               <tr>
                 <th>Order</th>
@@ -270,8 +265,93 @@ export function OrdersPage({
                 )
               })}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+          <div className="orders-mobile-list">
+            {orders.map((order) => (
+              <article className="orders-mobile-card" key={order.id}>
+                <div className="orders-mobile-card-heading">
+                  <div className="order-id-group">
+                    <span className="order-icon"><UtensilsCrossed size={15} /></span>
+                    <div>
+                      <button
+                        type="button"
+                        className="order-number-link"
+                        onClick={() => setSelectedOrderId(order.id)}
+                      >
+                        {order.number}
+                      </button>
+                      <small>{formatDateTime(order.created_at)}</small>
+                    </div>
+                  </div>
+                  <StatusPill
+                    status={order.status}
+                    label={orderStatusLabels[order.status]}
+                  />
+                </div>
+                <div className="orders-mobile-summary">
+                  <div className="orders-mobile-field">
+                    <span>Guest</span>
+                    <strong>{order.guest_name}</strong>
+                    <a href={`tel:${order.phone}`}>{order.phone}</a>
+                    {order.email && <a href={`mailto:${order.email}`}>{order.email}</a>}
+                  </div>
+                  <div className="orders-mobile-field">
+                    <span>Service</span>
+                    <strong>{order.order_type === 'dine_in' ? 'Dine in' : 'Lodge / cottage'}</strong>
+                    <small>{order.location}</small>
+                  </div>
+                  <div className="orders-mobile-field">
+                    <span>Payment</span>
+                    <strong>{order.payment_method === 'cash' ? 'Cash at resort' : 'Card at counter'}</strong>
+                    {order.payment_status === 'paid' ? (
+                      <small className="payment-paid">Paid</small>
+                    ) : order.status === 'cancelled' ? (
+                      <small>Unpaid</small>
+                    ) : (
+                      <button
+                        className="payment-link"
+                        type="button"
+                        disabled={workingId === order.id}
+                        onClick={() => void updateOrder(order, { payment_status: 'paid' })}
+                      >
+                        Unpaid · mark paid
+                      </button>
+                    )}
+                  </div>
+                  <div className="orders-mobile-field">
+                    <span>Total</span>
+                    <strong className="orders-mobile-total">{formatUGX(order.total_ugx)}</strong>
+                  </div>
+                </div>
+                <div className="orders-mobile-items">
+                  <div className="orders-mobile-items-heading">
+                    <strong>Items</strong>
+                    <span>{order.items.length} line{order.items.length === 1 ? '' : 's'}</span>
+                  </div>
+                  <div className="order-items">
+                    {order.items.map((item) => (
+                      <span className="order-item-chip" key={item.id}>
+                        {item.quantity} × {item.product_name}
+                      </span>
+                    ))}
+                  </div>
+                  {order.note && <p className="orders-mobile-note">Note: {order.note}</p>}
+                </div>
+                <div className="orders-mobile-actions">
+                  <button
+                    type="button"
+                    className="button button-outline button-small"
+                    disabled={workingId === order.id}
+                    onClick={() => setSelectedOrderId(order.id)}
+                  >
+                    View order
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
       ) : (
         <div className="panel">
           <EmptyState
@@ -387,6 +467,6 @@ export function OrdersPage({
           </div>
         </Modal>
       )}
-    </>
+    </div>
   )
 }

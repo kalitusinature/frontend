@@ -14,10 +14,14 @@ import {
 } from '../components/ui'
 import { formatDate } from '../utils'
 
-const blankLodge = (): LodgeInput => ({
+type LodgeDraft = Omit<LodgeInput, 'capacity'> & {
+  capacity: string
+}
+
+const blankLodge = (): LodgeDraft => ({
   name: '',
   description: '',
-  capacity: 2,
+  capacity: '',
   min_nights: 1,
   max_nights: 30,
   min_advance_days: 0,
@@ -40,7 +44,7 @@ export function LodgesPage({
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Lodge | null>(null)
   const [showAdvancedFields, setShowAdvancedFields] = useState(false)
-  const [draft, setDraft] = useState<LodgeInput>(blankLodge())
+  const [draft, setDraft] = useState<LodgeDraft>(blankLodge())
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [imageError, setImageError] = useState('')
@@ -155,7 +159,7 @@ export function LodgesPage({
     setDraft({
       name: lodge.name,
       description: lodge.description,
-      capacity: lodge.capacity,
+      capacity: String(lodge.capacity),
       min_nights: lodge.min_nights,
       max_nights: lodge.max_nights,
       min_advance_days: lodge.min_advance_days,
@@ -217,10 +221,20 @@ export function LodgesPage({
       setFormError('Wait for the image to finish optimizing before saving.')
       return
     }
+    if (!draft.capacity.trim()) {
+      setFormError('Enter the guest capacity.')
+      return
+    }
+
+    const lodgeInput: LodgeInput = {
+      ...draft,
+      capacity: Number(draft.capacity),
+    }
+
     setSaving(true)
     setFormError('')
     try {
-      await api.saveLodge(token, draft, editing?.id, selectedImage ?? undefined)
+      await api.saveLodge(token, lodgeInput, editing?.id, selectedImage ?? undefined)
       closeEditor()
       setRefreshKey((value) => value + 1)
       notify(editing ? 'Lodge details updated.' : 'Lodge added.')
@@ -279,16 +293,18 @@ export function LodgesPage({
 
   return (
     <>
-      <PageHeading
-        eyebrow="STAY INVENTORY"
-        title="Lodges & cottages"
-        description="Manage the accommodation options guests can request."
-        action={
-          <button className="button button-primary" onClick={openNew}>
-            <Plus size={17} /> Add cottage
-          </button>
-        }
-      />
+      <div className="compact-action-heading lodge-heading-wrap">
+        <PageHeading
+          eyebrow="STAY INVENTORY"
+          title="Lodges & cottages"
+          description="Manage the accommodation options guests can request."
+          action={
+            <button type="button" className="button button-primary" onClick={openNew}>
+              <Plus size={17} /> Add cottage
+            </button>
+          }
+        />
+      </div>
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}
       {loading ? (
         <LoadingState label="Loading lodge inventory…" />
@@ -347,7 +363,10 @@ export function LodgesPage({
           </div>
         </div>
         {blockoutError && <div className="form-error" role="alert">{blockoutError}</div>}
-        <form className="form-grid" onSubmit={(event) => void saveBlockout(event)}>
+        <form
+          className="form-grid lodge-availability-form"
+          onSubmit={(event) => void saveBlockout(event)}
+        >
           <FormField label="Lodge or cottage">
             <select
               required
@@ -534,11 +553,10 @@ export function LodgesPage({
               <FormField label="Guest capacity">
                 <input
                   type="number"
-                  min="1"
                   max="50"
                   required
                   value={draft.capacity}
-                  onChange={(event) => setDraft({ ...draft, capacity: Number(event.target.value) })}
+                  onChange={(event) => setDraft({ ...draft, capacity: event.target.value })}
                 />
               </FormField>
             </div>

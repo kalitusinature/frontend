@@ -133,6 +133,7 @@ export function ReservationsPage({
     reservations?: Reservation[]
     error?: string
   } | null>(null)
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<string | null>(null)
 
   const requestKey = `${token}:${status}:${source}:${lodgeFilter}:${query}:${startDate}:${endDate}:${ordering}:${page}:${refreshKey}`
   const reservations = result?.key === requestKey ? result.reservations ?? [] : []
@@ -351,6 +352,7 @@ export function ReservationsPage({
   }
 
   const changeCalendar = (direction: -1 | 1) => {
+    setSelectedCalendarDay(null)
     const jump = calendarMode === 'day' ? 1 : calendarMode === 'week' ? 7 : 0
     if (jump) {
       setCalendarDate(shiftDate(calendarDate, jump * direction))
@@ -380,6 +382,35 @@ export function ReservationsPage({
       : calendarMode === 'day'
         ? formatDate(calendarDate)
         : `${formatDate(dateWindow.start)} – ${formatDate(shiftDate(dateWindow.end, -1))}`
+  const compactCalendarTitle = (() => {
+    const start = new Date(`${dateWindow.start}T12:00:00`)
+    const end = new Date(`${shiftDate(dateWindow.end, -1)}T12:00:00`)
+    if (calendarMode === 'month') {
+      return new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(start)
+    }
+    if (calendarMode === 'day') {
+      return new Intl.DateTimeFormat('en', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(start)
+    }
+    if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+      const month = new Intl.DateTimeFormat('en', { month: 'short' }).format(start)
+      return `${start.getDate()}–${end.getDate()} ${month} ${start.getFullYear()}`
+    }
+    const dateFormat = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short' })
+    return start.getFullYear() === end.getFullYear()
+      ? `${dateFormat.format(start)}–${dateFormat.format(end)} ${end.getFullYear()}`
+      : `${dateFormat.format(start)} ${start.getFullYear()}–${dateFormat.format(end)} ${end.getFullYear()}`
+  })()
+  const selectedDayReservations = selectedCalendarDay
+    ? calendarReservations.filter(
+        (reservation) =>
+          reservation.check_in <= selectedCalendarDay &&
+          reservation.check_out > selectedCalendarDay,
+      )
+    : []
 
   const reservationCards = (items: Reservation[]) => items.map((reservation) => (
     <article className="reservation-card" key={reservation.id}>
@@ -488,16 +519,18 @@ export function ReservationsPage({
 
   return (
     <>
-      <PageHeading
-        eyebrow="GUEST SERVICES"
-        title="Reservations"
-        description="Review guest stays, manage availability, and track reservations on the calendar."
-        action={
-          <button className="button button-primary" onClick={openCreate}>
-            <Plus size={17} /> Add reservation
-          </button>
-        }
-      />
+      <div className="compact-action-heading">
+        <PageHeading
+          eyebrow="GUEST SERVICES"
+          title="Reservations"
+          description="Review guest stays, manage availability, and track reservations on the calendar."
+          action={
+            <button className="button button-primary" onClick={openCreate}>
+              <Plus size={17} /> Add reservation
+            </button>
+          }
+        />
+      </div>
       {dashboard && (
         <div className="reservation-metrics">
           {[
@@ -518,31 +551,55 @@ export function ReservationsPage({
       )}
       <section className="panel reservation-calendar">
         <div className="calendar-toolbar">
-          <div>
+          <div className="calendar-heading">
             <span className="eyebrow"><CalendarDays size={13} /> STAY CALENDAR</span>
-            <h2>{calendarTitle}</h2>
-          </div>
-          <div className="calendar-controls">
-            <div className="calendar-mode" role="group" aria-label="Calendar view">
-              {(['day', 'week', 'month'] as const).map((mode) => (
-                <button
-                  type="button"
-                  key={mode}
-                  className={calendarMode === mode ? 'is-selected' : ''}
-                  aria-pressed={calendarMode === mode}
-                  onClick={() => setCalendarMode(mode)}
-                >
-                  {mode}
-                </button>
-              ))}
+            <div className="calendar-title-row">
+              <h2 title={calendarTitle} aria-label={calendarTitle}>
+                <span className="calendar-title-full">{calendarTitle}</span>
+                <span className="calendar-title-compact">{compactCalendarTitle}</span>
+              </h2>
+              <div className="calendar-controls">
+                <div className="calendar-mode" role="group" aria-label="Calendar view">
+                  {(['day', 'week', 'month'] as const).map((mode) => (
+                    <button
+                      type="button"
+                      key={mode}
+                      className={calendarMode === mode ? 'is-selected' : ''}
+                      aria-pressed={calendarMode === mode}
+                      onClick={() => {
+                        setSelectedCalendarDay(null)
+                        setCalendarMode(mode)
+                      }}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
+                <div className="calendar-navigation">
+                  <button className="icon-button" aria-label="Previous period" onClick={() => changeCalendar(-1)}>
+                    <ChevronLeft size={17} />
+                  </button>
+                  <button className="icon-button" aria-label="Next period" onClick={() => changeCalendar(1)}>
+                    <ChevronRight size={17} />
+                  </button>
+                </div>
+              </div>
             </div>
-            <button className="icon-button" aria-label="Previous period" onClick={() => changeCalendar(-1)}>
-              <ChevronLeft size={17} />
-            </button>
-            <button className="icon-button" aria-label="Next period" onClick={() => changeCalendar(1)}>
-              <ChevronRight size={17} />
-            </button>
           </div>
+        </div>
+        <div className="calendar-legend" aria-label="Reservation status legend">
+          {[
+            ['pending', 'Pending'],
+            ['confirmed', 'Confirmed'],
+            ['declined', 'Declined'],
+            ['cancelled', 'Cancelled'],
+            ['completed', 'Completed'],
+          ].map(([status, label]) => (
+            <span key={status}>
+              <i className={`calendar-legend-dot is-${status}`} aria-hidden="true" />
+              {label}
+            </span>
+          ))}
         </div>
         {calendarError && <ErrorState message={calendarError} retry={() => setRefreshKey((value) => value + 1)} />}
         {calendarLoading ? (
@@ -563,13 +620,28 @@ export function ReservationsPage({
               )
               return (
                 <div className="calendar-cell" key={day}>
-                  <strong className="calendar-date">{new Date(`${day}T12:00:00`).getDate()}</strong>
+                  <button
+                    type="button"
+                    className="calendar-cell-open"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    onClick={() => setSelectedCalendarDay(day)}
+                  />
+                  <button
+                    type="button"
+                    className="calendar-date"
+                    aria-label={`Show reservations for ${formatDate(day)}`}
+                    onClick={() => setSelectedCalendarDay(day)}
+                  >
+                    {new Date(`${day}T12:00:00`).getDate()}
+                  </button>
                   {stays.map((reservation) => (
                     <button
                       type="button"
                       key={reservation.id}
                       className={`calendar-reservation is-${reservation.status}`}
-                      onClick={() => openEdit(reservation)}
+                      onClick={() => setSelectedCalendarDay(day)}
+                      aria-label={`${reservation.reference}, ${reservation.guest_name}, ${reservation.lodge_name}, ${reservation.status}`}
                       title={`${reservation.reference} · ${reservation.guest_name} · ${reservation.lodge_name}`}
                     >
                       <span>{reservation.guest_name}</span>
@@ -759,6 +831,79 @@ export function ReservationsPage({
             {editError && <div className="form-error" role="alert">{editError}</div>}
             <FormActions onCancel={closeEditor} saving={saving} submitLabel={editing ? 'Save reservation' : 'Create reservation'} />
           </form>
+        </Modal>
+      )}
+      {selectedCalendarDay && (
+        <Modal
+          className="calendar-day-modal"
+          title={`Stays on ${formatDate(selectedCalendarDay)}`}
+          subtitle={`${selectedDayReservations.length} reservation${selectedDayReservations.length === 1 ? '' : 's'} scheduled`}
+          onClose={() => setSelectedCalendarDay(null)}
+        >
+          {selectedDayReservations.length ? (
+            <div className="calendar-day-bookings">
+              {selectedDayReservations.map((reservation) => (
+                <article
+                  className={`calendar-day-booking is-${reservation.status}`}
+                  key={reservation.id}
+                >
+                  <div className="calendar-day-booking-heading">
+                    <div>
+                      <strong>{reservation.guest_name}</strong>
+                      <small>{reservation.reference}</small>
+                    </div>
+                    <StatusPill status={reservation.status} />
+                  </div>
+                  <p className="calendar-day-booking-lodge">{reservation.lodge_name}</p>
+                  <div className="calendar-day-booking-facts">
+                    <span><strong>Check-in</strong>{formatDate(reservation.check_in)}</span>
+                    <span><strong>Check-out</strong>{formatDate(reservation.check_out)}</span>
+                    <span>
+                      <strong>Guests</strong>
+                      {reservation.adults} adult{reservation.adults === 1 ? '' : 's'}
+                      {reservation.children
+                        ? ` · ${reservation.children} child${reservation.children === 1 ? '' : 'ren'}`
+                        : ''}
+                    </span>
+                    <span>
+                      <strong>Source</strong>
+                      {sourceOptions.find((option) => option.value === reservation.source)?.label
+                        ?? reservation.source}
+                    </span>
+                  </div>
+                  <div className="calendar-day-booking-contact">
+                    <a href={`tel:${reservation.phone}`}><Phone size={13} /> {reservation.phone}</a>
+                    {reservation.email && (
+                      <a href={`mailto:${reservation.email}`}>
+                        <Mail size={13} /> {reservation.email}
+                      </a>
+                    )}
+                  </div>
+                  {(reservation.occasion || reservation.note) && (
+                    <p className="calendar-day-booking-note">
+                      {reservation.occasion && <strong>{reservation.occasion}: </strong>}
+                      {reservation.note}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    className="button button-outline calendar-day-booking-edit"
+                    onClick={() => {
+                      setSelectedCalendarDay(null)
+                      openEdit(reservation)
+                    }}
+                  >
+                    <Pencil size={14} /> Edit reservation
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No stays on this day"
+              description="Reservations covering this date will appear here."
+            />
+          )}
         </Modal>
       )}
     </>

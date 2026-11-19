@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   BedDouble,
   ChevronDown,
@@ -43,6 +43,11 @@ function titleForPage(page: PageId): string {
   return navigation.find((item) => item.id === page)?.label ?? 'Dashboard'
 }
 
+type IncomingCounts = {
+  orders: number
+  reservations: number
+}
+
 function App() {
   const [token, setToken] = useState(
     () => window.sessionStorage.getItem('kalitusi-admin-token') ?? '',
@@ -55,6 +60,10 @@ function App() {
   const [notice, setNotice] = useState('')
   const [checkingToken, setCheckingToken] = useState(Boolean(token))
   const [authError, setAuthError] = useState('')
+  const [unreadOrders, setUnreadOrders] = useState(0)
+  const [unreadReservations, setUnreadReservations] = useState(0)
+  const previousIncomingCounts = useRef<IncomingCounts | null>(null)
+  const activePageRef = useRef<PageId>('dashboard')
   const [todayLabel] = useState(() =>
     new Intl.DateTimeFormat('en-UG', {
       weekday: 'short',
@@ -63,30 +72,78 @@ function App() {
     }).format(new Date()),
   )
 
+  const navigateToPage = (page: PageId) => {
+    activePageRef.current = page
+    if (page === 'orders') setUnreadOrders(0)
+    if (page === 'reservations') setUnreadReservations(0)
+    setActivePage(page)
+  }
+
   useEffect(() => {
+    previousIncomingCounts.current = null
     if (!token) return
 
     let active = true
-    api
-      .dashboard(token)
-      .catch((error: unknown) => {
+    let refreshing = false
+    const refreshIncomingCounts = async () => {
+      if (refreshing) return
+      refreshing = true
+      try {
+        const data = await api.dashboard(token)
+        if (!active) return
+        const counts = {
+          orders: data.new_orders,
+          reservations: data.pending_reservations,
+        }
+        const previous = previousIncomingCounts.current
+        if (previous === null) {
+          setUnreadOrders(activePageRef.current === 'orders' ? 0 : counts.orders)
+          setUnreadReservations(
+            activePageRef.current === 'reservations' ? 0 : counts.reservations,
+          )
+        } else {
+          const newOrders = Math.max(0, counts.orders - previous.orders)
+          const newReservations = Math.max(
+            0,
+            counts.reservations - previous.reservations,
+          )
+          setUnreadOrders((unread) => Math.min(unread, counts.orders) + newOrders)
+          setUnreadReservations(
+            (unread) => Math.min(unread, counts.reservations) + newReservations,
+          )
+        }
+        previousIncomingCounts.current = counts
+        setAuthError('')
+      } catch (error: unknown) {
+        if (!active) return
         if (error instanceof ApiError && [401, 403].includes(error.status)) {
           window.sessionStorage.removeItem('kalitusi-admin-token')
           window.sessionStorage.removeItem('kalitusi-admin-user')
           setToken('')
           setUsername('')
+          setUnreadOrders(0)
+          setUnreadReservations(0)
+          activePageRef.current = 'dashboard'
+          setActivePage('dashboard')
         } else {
           setAuthError(
             error instanceof Error ? error.message : 'Could not connect to the server.',
           )
         }
-      })
-      .finally(() => {
+      } finally {
+        refreshing = false
         if (active) setCheckingToken(false)
-      })
+      }
+    }
+
+    void refreshIncomingCounts()
+    const refreshTimer = window.setInterval(() => {
+      void refreshIncomingCounts()
+    }, 30_000)
 
     return () => {
       active = false
+      window.clearInterval(refreshTimer)
     }
   }, [token])
 
@@ -96,6 +153,10 @@ function App() {
     setToken(result.token)
     setUsername(result.username)
     setAuthError('')
+    setUnreadOrders(0)
+    setUnreadReservations(0)
+    activePageRef.current = 'dashboard'
+    setActivePage('dashboard')
   }
 
   const handleLogout = async () => {
@@ -112,6 +173,10 @@ function App() {
       window.sessionStorage.removeItem('kalitusi-admin-user')
       setToken('')
       setUsername('')
+      setUnreadOrders(0)
+      setUnreadReservations(0)
+      previousIncomingCounts.current = null
+      activePageRef.current = 'dashboard'
       setActivePage('dashboard')
     }
   }
@@ -163,13 +228,25 @@ function App() {
               key={id}
               className={`nav-item ${activePage === id ? 'nav-item-active' : ''}`}
               onClick={() => {
-                setActivePage(id)
+                navigateToPage(id)
                 setSidebarOpen(false)
               }}
             >
               <Icon size={18} strokeWidth={1.8} />
               <span>{label}</span>
-              {id === 'orders' && <span className="nav-live-dot" />}
+              {id === 'orders' && unreadOrders > 0 && (
+                <span className="nav-count-badge" aria-label={`${unreadOrders} unread orders`}>
+                  {unreadOrders > 99 ? '99+' : unreadOrders}
+                </span>
+              )}
+              {id === 'reservations' && unreadReservations > 0 && (
+                <span
+                  className="nav-count-badge"
+                  aria-label={`${unreadReservations} unread reservations`}
+                >
+                  {unreadReservations > 99 ? '99+' : unreadReservations}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -217,7 +294,7 @@ function App() {
           {activePage === 'dashboard' && (
             <DashboardPage
               {...pageProps}
-              onNavigate={setActivePage}
+              onNavigate={navigateToPage}
             />
           )}
           {activePage === 'orders' && <OrdersPage {...pageProps} />}

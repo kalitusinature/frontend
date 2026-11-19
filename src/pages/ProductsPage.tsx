@@ -14,15 +14,20 @@ import {
 import { optimizeImage } from '../image'
 import { formatUGX } from '../utils'
 
-const blankProduct = (categoryId = 0): ProductInput => ({
+type ProductDraft = Omit<ProductInput, 'price_ugx' | 'sort_order'> & {
+  price_ugx: string
+  sort_order: string
+}
+
+const blankProduct = (categoryId = 0): ProductDraft => ({
   name: '',
   category_id: categoryId,
   description: '',
-  price_ugx: 0,
+  price_ugx: '',
   image_url: '',
   is_available: true,
   is_featured: false,
-  sort_order: 0,
+  sort_order: '',
 })
 
 export function ProductsPage({
@@ -35,7 +40,7 @@ export function ProductsPage({
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
-  const [draft, setDraft] = useState<ProductInput>(blankProduct())
+  const [draft, setDraft] = useState<ProductDraft>(blankProduct())
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [imageError, setImageError] = useState('')
@@ -115,11 +120,11 @@ export function ProductsPage({
       name: product.name,
       category_id: product.category_id,
       description: product.description,
-      price_ugx: product.price_ugx,
+      price_ugx: product.price_ugx === 0 ? '' : String(product.price_ugx),
       image_url: product.image_url,
       is_available: product.is_available,
       is_featured: product.is_featured,
-      sort_order: product.sort_order,
+      sort_order: product.sort_order === 0 ? '' : String(product.sort_order),
     })
     setFormError('')
     setImageError('')
@@ -174,10 +179,25 @@ export function ProductsPage({
       setFormError('Wait for the image to finish optimizing before saving.')
       return
     }
+    if (!draft.price_ugx.trim()) {
+      setFormError('Enter a product price.')
+      return
+    }
+
+    const productInput: ProductInput = {
+      ...draft,
+      price_ugx: Number(draft.price_ugx),
+      sort_order: draft.sort_order.trim() ? Number(draft.sort_order) : 0,
+    }
+    if (!Number.isFinite(productInput.price_ugx) || !Number.isFinite(productInput.sort_order)) {
+      setFormError('Enter valid numbers for price and display order.')
+      return
+    }
+
     setSaving(true)
     setFormError('')
     try {
-      await api.saveProduct(token, draft, editing?.id, selectedImage ?? undefined)
+      await api.saveProduct(token, productInput, editing?.id, selectedImage ?? undefined)
       closeEditor()
       setRefreshKey((value) => value + 1)
       notify(editing ? 'Menu item updated.' : 'Menu item created.')
@@ -197,18 +217,20 @@ export function ProductsPage({
   )
 
   return (
-    <>
-      <PageHeading
-        eyebrow="MENU MANAGEMENT"
-        title="Menu products"
-        description="Keep food and drinks up to date for your Odoo storefront."
-        action={
-          <button className="button button-primary" onClick={openNew}>
-            <Plus size={17} /> Add product
-          </button>
-        }
-      />
-      <div className="toolbar">
+    <div className="menu-page">
+      <div className="compact-action-heading">
+        <PageHeading
+          eyebrow="MENU MANAGEMENT"
+          title="Menu products"
+          description="Keep food and drinks up to date for your Odoo storefront."
+          action={
+            <button type="button" className="button button-primary" onClick={openNew}>
+              <Plus size={17} /> Add product
+            </button>
+          }
+        />
+      </div>
+      <div className="toolbar menu-toolbar">
         <form className="search-form product-search" onSubmit={(event) => event.preventDefault()}>
           <Search size={16} />
           <input
@@ -229,49 +251,44 @@ export function ProductsPage({
       {loading ? (
         <LoadingState label="Loading the menu…" />
       ) : visibleProducts.length ? (
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Availability</th>
-                <th><span className="sr-only">Edit</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleProducts.map((product) => (
-                <tr key={product.id}>
-                  <td>
-                    <div className="table-product">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt="" />
-                      ) : (
-                        <span className="product-placeholder"><UtensilsCrossed size={17} /></span>
-                      )}
-                      <span>
-                        <strong>{product.name}</strong>
-                        {product.is_featured && <small className="featured-label">Featured</small>}
-                      </span>
-                    </div>
-                  </td>
-                  <td>{product.category_name}</td>
-                  <td className="table-price">{formatUGX(product.price_ugx)}</td>
-                  <td>
-                    <span className={`availability ${product.is_available ? 'available' : 'unavailable'}`}>
-                      <span /> {product.is_available ? 'Available' : 'Hidden'}
-                    </span>
-                  </td>
-                  <td className="table-actions">
-                    <button className="icon-button edit-button" aria-label={`Edit ${product.name}`} onClick={() => openEdit(product)}>
-                      <Pencil size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="menu-product-grid">
+          {visibleProducts.map((product) => (
+            <article className="menu-product-card" key={product.id}>
+              <div className="menu-product-image">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} loading="lazy" />
+                ) : (
+                  <div className="menu-product-placeholder">
+                    <UtensilsCrossed size={25} />
+                  </div>
+                )}
+                <div className="menu-product-badges">
+                  {product.is_featured && <span className="menu-featured-badge">Featured</span>}
+                  <span className={`menu-availability ${product.is_available ? 'is-available' : 'is-hidden'}`}>
+                    <span />
+                    {product.is_available ? 'Available' : 'Hidden'}
+                  </span>
+                </div>
+              </div>
+              <div className="menu-product-content">
+                <span className="menu-product-category">{product.category_name}</span>
+                <h2>{product.name}</h2>
+                <p>{product.description || 'No description added.'}</p>
+                <div className="menu-product-footer">
+                  <strong>{formatUGX(product.price_ugx)}</strong>
+                  <button
+                    type="button"
+                    className="button button-outline button-small menu-edit-button"
+                    aria-label={`Edit ${product.name}`}
+                    onClick={() => openEdit(product)}
+                  >
+                    <Pencil size={14} />
+                    Edit
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
       ) : (
         <div className="panel">
@@ -394,11 +411,10 @@ export function ProductsPage({
               <FormField label="Price (UGX)">
                 <input
                   type="number"
-                  min="0"
                   step="500"
                   required
                   value={draft.price_ugx}
-                  onChange={(event) => setDraft({ ...draft, price_ugx: Number(event.target.value) })}
+                  onChange={(event) => setDraft({ ...draft, price_ugx: event.target.value })}
                 />
               </FormField>
             </div>
@@ -414,9 +430,8 @@ export function ProductsPage({
               <FormField label="Display order">
                 <input
                   type="number"
-                  min="0"
                   value={draft.sort_order}
-                  onChange={(event) => setDraft({ ...draft, sort_order: Number(event.target.value) })}
+                  onChange={(event) => setDraft({ ...draft, sort_order: event.target.value })}
                 />
               </FormField>
               <div className="toggle-stack">
@@ -447,6 +462,6 @@ export function ProductsPage({
           </form>
         </Modal>
       )}
-    </>
+    </div>
   )
 }

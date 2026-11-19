@@ -88,11 +88,13 @@ export function Modal({
   subtitle,
   onClose,
   children,
+  className = '',
 }: {
   title: string
   subtitle?: string
   onClose: () => void
   children: ReactNode
+  className?: string
 }) {
   return (
     <div
@@ -103,7 +105,7 @@ export function Modal({
       }}
     >
       <section
-        className="modal-card"
+        className={`modal-card ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

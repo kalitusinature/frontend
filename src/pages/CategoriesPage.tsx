@@ -102,16 +102,18 @@ export function CategoriesPage({
 
   return (
     <>
-      <PageHeading
-        eyebrow="MENU STRUCTURE"
-        title="Categories"
-        description="Organise the menu into clear sections for your guests."
-        action={
-          <button className="button button-primary" onClick={openNew}>
-            <Plus size={17} /> Add category
-          </button>
-        }
-      />
+      <div className="compact-action-heading">
+        <PageHeading
+          eyebrow="MENU STRUCTURE"
+          title="Categories"
+          description="Organise the menu into clear sections for your guests."
+          action={
+            <button className="button button-primary" onClick={openNew}>
+              <Plus size={17} /> Add category
+            </button>
+          }
+        />
+      </div>
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}
       {loading ? (
         <LoadingState label="Loading menu categories…" />
