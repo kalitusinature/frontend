@@ -39,6 +39,7 @@ export function LodgesPage({
   const [refreshKey, setRefreshKey] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Lodge | null>(null)
+  const [showAdvancedFields, setShowAdvancedFields] = useState(false)
   const [draft, setDraft] = useState<LodgeInput>(blankLodge())
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
@@ -136,6 +137,7 @@ export function LodgesPage({
     setImagePreview('')
     setSelectedImage(null)
     setEditing(null)
+    setShowAdvancedFields(false)
     setDraft(blankLodge())
     setFormError('')
     setImageError('')
@@ -149,6 +151,7 @@ export function LodgesPage({
     setImagePreview(lodge.image_url)
     setSelectedImage(null)
     setEditing(lodge)
+    setShowAdvancedFields(true)
     setDraft({
       name: lodge.name,
       description: lodge.description,
@@ -282,7 +285,7 @@ export function LodgesPage({
         description="Manage the accommodation options guests can request."
         action={
           <button className="button button-primary" onClick={openNew}>
-            <Plus size={17} /> Add lodge
+            <Plus size={17} /> Add cottage
           </button>
         }
       />
@@ -326,7 +329,12 @@ export function LodgesPage({
         </div>
       ) : (
         <div className="panel">
-          <EmptyState title="Add your first stay option" description="Create a lodge or cottage for guests to request." />
+          <EmptyState title="No cottages added yet" description="Add a cottage so guests can see it and request a stay." />
+          <div className="empty-state-action">
+            <button className="button button-primary" onClick={openNew}>
+              <Plus size={17} /> Add your first cottage
+            </button>
+          </div>
         </div>
       )}
 
@@ -418,11 +426,12 @@ export function LodgesPage({
 
       {modalOpen && (
         <Modal
-          title={editing ? 'Edit lodge or cottage' : 'Add a lodge or cottage'}
-          subtitle="This information is shown to guests making a reservation request."
+          title={editing ? 'Edit cottage' : 'Add a cottage'}
+          subtitle={editing ? 'Update the details guests see when requesting a stay.' : 'Start with the cottage name and guest capacity. Photos and booking rules are optional.'}
           onClose={closeEditor}
         >
           <form className="editor-form" onSubmit={save}>
+            {(editing || showAdvancedFields) && (
             <div className="form-field product-image-field">
               <span>Cottage photo</span>
               <div
@@ -502,6 +511,7 @@ export function LodgesPage({
               </div>
               {imageError && <span className="form-error" role="alert">{imageError}</span>}
             </div>
+            )}
             <FormField label="Name">
               <input
                 autoFocus
@@ -531,10 +541,27 @@ export function LodgesPage({
                   onChange={(event) => setDraft({ ...draft, capacity: Number(event.target.value) })}
                 />
               </FormField>
-              <div className="capacity-label">
-                {draft.image_url ? 'Photo uploaded and visible on the cottages page' : 'No photo uploaded yet'}
-              </div>
             </div>
+            <label className="toggle-row standalone-toggle">
+              <input
+                type="checkbox"
+                checked={draft.is_active}
+                onChange={(event) => setDraft({ ...draft, is_active: event.target.checked })}
+              />
+              <span><strong>Show cottage to guests</strong><small>Guests can request active cottages</small></span>
+            </label>
+            {!editing && (
+              <button
+                type="button"
+                className="text-button lodge-advanced-toggle"
+                aria-expanded={showAdvancedFields}
+                onClick={() => setShowAdvancedFields((value) => !value)}
+              >
+                {showAdvancedFields ? 'Hide photo and booking rules' : 'Add photo or change booking rules'}
+              </button>
+            )}
+            {(editing || showAdvancedFields) && (
+            <div className="lodge-advanced-fields">
             <div className="form-grid">
               <FormField label="Minimum nights">
                 <input
@@ -599,16 +626,10 @@ export function LodgesPage({
                 ))}
               </div>
             </fieldset>
-            <label className="toggle-row standalone-toggle">
-              <input
-                type="checkbox"
-                checked={draft.is_active}
-                onChange={(event) => setDraft({ ...draft, is_active: event.target.checked })}
-              />
-              <span><strong>Accept reservation requests</strong><small>Inactive stays are hidden from guests</small></span>
-            </label>
+            </div>
+            )}
             {formError && <div className="form-error" role="alert">{formError}</div>}
-            <FormActions onCancel={closeEditor} saving={saving} submitLabel={editing ? 'Save changes' : 'Add lodge'} />
+            <FormActions onCancel={closeEditor} saving={saving} submitLabel={editing ? 'Save changes' : 'Add cottage'} />
           </form>
         </Modal>
       )}

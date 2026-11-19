@@ -2897,6 +2897,24 @@
   min-height: 210px;
 }
 
+.empty-state-action {
+  display: flex;
+  justify-content: center;
+  margin: -22px 0 24px;
+}
+
+.lodge-advanced-toggle {
+  justify-self: start;
+  margin: 2px 0;
+}
+
+.lodge-advanced-fields {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e8eee9;
+}
+
 .empty-mark {
   border-radius: 14px;
   color: #397656;
