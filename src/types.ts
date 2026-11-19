@@ -58,6 +58,7 @@ export interface Lodge {
 export interface OrderItem {
   id: number
   product_name: string
+  product_image_url: string
   unit_price_ugx: number
   quantity: number
   line_total_ugx: number

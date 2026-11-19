@@ -217,9 +217,18 @@ export function OrdersPage({
                     <td className="orders-items-cell">
                       <div className="order-items order-items-table">
                         {order.items.map((item) => (
-                          <span className="order-item-chip" key={item.id}>
-                            {item.quantity} × {item.product_name}
-                          </span>
+                          <button
+                            type="button"
+                            className="order-item-chip order-item-chip-button"
+                            key={item.id}
+                            onClick={() => setSelectedOrderId(order.id)}
+                            aria-label={`View ${item.quantity} ${item.product_name} in ${order.number}`}
+                          >
+                            {item.product_image_url && (
+                              <img src={item.product_image_url} alt="" />
+                            )}
+                            <span>{item.quantity} × {item.product_name}</span>
+                          </button>
                         ))}
                       </div>
                       {order.note && (
@@ -349,9 +358,18 @@ export function OrdersPage({
                   </div>
                   <div className="order-items">
                     {order.items.map((item) => (
-                      <span className="order-item-chip" key={item.id}>
-                        {item.quantity} × {item.product_name}
-                      </span>
+                      <button
+                        type="button"
+                        className="order-item-chip order-item-chip-button"
+                        key={item.id}
+                        onClick={() => setSelectedOrderId(order.id)}
+                        aria-label={`View ${item.quantity} ${item.product_name} in ${order.number}`}
+                      >
+                        {item.product_image_url && (
+                          <img src={item.product_image_url} alt="" />
+                        )}
+                        <span>{item.quantity} × {item.product_name}</span>
+                      </button>
                     ))}
                   </div>
                   {order.note && <p className="orders-mobile-note">Note: {order.note}</p>}
@@ -438,7 +456,22 @@ export function OrdersPage({
             <h3>Items</h3>
             {selectedOrder.items.map((item) => (
               <div className="order-detail-line" key={item.id}>
-                <span>{item.quantity} × {item.product_name}</span>
+                <button
+                  type="button"
+                  className="order-detail-item"
+                  onClick={() => setSelectedOrderId(selectedOrder.id)}
+                >
+                  {item.product_image_url ? (
+                    <img
+                      className="order-detail-item-image"
+                      src={item.product_image_url}
+                      alt={item.product_name}
+                    />
+                  ) : (
+                    <span className="order-detail-item-image order-detail-item-placeholder" aria-hidden="true" />
+                  )}
+                  <span>{item.quantity} × {item.product_name}</span>
+                </button>
                 <strong>{formatUGX(item.line_total_ugx)}</strong>
               </div>
             ))}

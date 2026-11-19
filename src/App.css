@@ -1031,6 +1031,29 @@
   font-size: 9px;
 }
 
+.order-item-chip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.order-item-chip-button:hover,
+.order-item-chip-button:focus-visible {
+  border-color: #a9c9c4;
+  color: #126b66;
+  background: #f7fbfa;
+}
+
+.order-item-chip-button img {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  object-fit: cover;
+  background: #edf3f0;
+}
+
 .order-note {
   color: #a17b55;
   font-size: 10px;
@@ -1737,6 +1760,33 @@
 .order-detail-line strong {
   color: #41534a;
   white-space: nowrap;
+}
+
+.order-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: default;
+  font: inherit;
+  text-align: left;
+}
+
+.order-detail-item-image {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #edf3f0;
+}
+
+.order-detail-item-placeholder {
+  border: 1px solid #dfe8e4;
 }
 
 .order-detail-note {
