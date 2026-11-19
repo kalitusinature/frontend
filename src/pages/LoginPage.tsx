@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowRight, Eye, EyeOff, Leaf, LockKeyhole } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import { ApiError, api } from '../api'
 import { InstallAppButton } from '../components/InstallAppButton'
 import type { LoginResponse } from '../types'
@@ -38,7 +38,12 @@ export function LoginPage({
     <main className="login-screen">
       <section className="login-showcase" aria-label="Kalitusi Resort staff workspace">
         <div className="login-brand">
-          <span className="login-brand-mark"><Leaf size={22} /></span>
+          <span className="login-brand-mark">
+            <img
+              src={`${import.meta.env.BASE_URL}kalitusi logo.jpg`}
+              alt=""
+            />
+          </span>
           <span>
             <strong>Kalitusi</strong>
             <small>RESORT NATURE HOTEL</small>

@@ -2168,10 +2168,20 @@
 .login-brand-mark {
   width: 42px;
   height: 42px;
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+  overflow: hidden;
   border-color: #d6e4da;
   border-radius: 13px;
   color: #49765d;
   background: #e5efe7;
+}
+
+.login-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .login-brand strong {
