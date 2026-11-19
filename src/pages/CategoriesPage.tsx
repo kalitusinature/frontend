@@ -38,7 +38,7 @@ export function CategoriesPage({
     categories?: Category[]
     error?: string
   } | null>(null)
-  const requestKey = `${token}:${refreshKey}`
+  const requestKey = `${token}`
   const categories = result?.key === requestKey ? result.categories ?? [] : []
   const loading = result?.key !== requestKey
   const error = result?.key === requestKey ? result.error ?? '' : ''
@@ -60,7 +60,7 @@ export function CategoriesPage({
     return () => {
       active = false
     }
-  }, [token, requestKey])
+  }, [token, requestKey, refreshKey])
 
   const openNew = () => {
     setEditing(null)

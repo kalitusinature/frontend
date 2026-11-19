@@ -70,7 +70,7 @@ export function LodgesPage({
     end_date: '',
     reason: '',
   })
-  const requestKey = `${token}:${refreshKey}`
+  const requestKey = `${token}`
   const lodges = result?.key === requestKey ? result.lodges ?? [] : []
   const loading = result?.key !== requestKey
   const error = result?.key === requestKey ? result.error ?? '' : ''

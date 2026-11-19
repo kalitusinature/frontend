@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kalitusi-admin-v3'
+const CACHE_NAME = 'kalitusi-admin-v4'
 const APP_SHELL = self.registration.scope
 const scopedUrl = (path) => new URL(path, self.registration.scope).href
 
@@ -48,32 +48,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (['script', 'style', 'image', 'font'].includes(request.destination)) {
-    const cachedResponsePromise = caches.match(request)
-    let responseToCache
-    const networkResponsePromise = cachedResponsePromise.then((cachedResponse) =>
-      cachedResponse
-        ? undefined
-        : fetch(request).then((response) => {
-            if (response.ok) responseToCache = response.clone()
-            return response
-          }),
-    )
-
     event.respondWith(
-      Promise.all([cachedResponsePromise, networkResponsePromise]).then(
-        ([cachedResponse, networkResponse]) => cachedResponse || networkResponse,
-      ),
-    )
-    event.waitUntil(
-      networkResponsePromise.then(
-        () =>
-          responseToCache
-            ? caches
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseToCache = response.clone()
+            event.waitUntil(
+              caches
                 .open(CACHE_NAME)
-                .then((cache) => cache.put(request, responseToCache))
-            : undefined,
-        () => undefined,
-      ),
+                .then((cache) => cache.put(request, responseToCache)),
+            )
+          }
+          return response
+        })
+        .catch(() => caches.match(request)),
     )
   }
 })

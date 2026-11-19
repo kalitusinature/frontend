@@ -139,7 +139,7 @@ export function ReservationsPage({
   } | null>(null)
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<string | null>(null)
 
-  const requestKey = `${token}:${status}:${source}:${lodgeFilter}:${query}:${startDate}:${endDate}:${ordering}:${page}:${refreshKey}`
+  const requestKey = `${token}:${status}:${source}:${lodgeFilter}:${query}:${startDate}:${endDate}:${ordering}:${page}`
   const reservations = result?.key === requestKey ? result.reservations ?? [] : []
   const count = result?.key === requestKey ? result.count ?? 0 : 0
   const loading = result?.key !== requestKey
@@ -148,7 +148,7 @@ export function ReservationsPage({
     () => calendarWindow(calendarMode, calendarDate),
     [calendarDate, calendarMode],
   )
-  const calendarKey = `${token}:${dateWindow.start}:${dateWindow.end}:${refreshKey}`
+  const calendarKey = `${token}:${dateWindow.start}:${dateWindow.end}`
   const calendarReservations =
     calendarResult?.key === calendarKey ? calendarResult.reservations ?? [] : []
   const calendarLoading = calendarResult?.key !== calendarKey
@@ -186,7 +186,7 @@ export function ReservationsPage({
     return () => {
       active = false
     }
-  }, [token, requestKey, status, source, lodgeFilter, query, startDate, endDate, ordering, page])
+  }, [token, requestKey, refreshKey, status, source, lodgeFilter, query, startDate, endDate, ordering, page])
 
   useEffect(() => {
     let active = true

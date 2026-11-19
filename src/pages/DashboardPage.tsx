@@ -44,7 +44,7 @@ export function DashboardPage({
     data?: DashboardData
     error?: string
   } | null>(null)
-  const requestKey = `${token}:${refreshKey}`
+  const requestKey = `${token}`
   const data = result?.key === requestKey ? result.data ?? null : null
   const error = result?.key === requestKey ? result.error ?? '' : ''
   const loading = result?.key !== requestKey
@@ -76,7 +76,7 @@ export function DashboardPage({
     return () => {
       active = false
     }
-  }, [token, requestKey])
+  }, [token, requestKey, refreshKey])
 
   const load = () => setRefreshKey((value) => value + 1)
 

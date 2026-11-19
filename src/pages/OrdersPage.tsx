@@ -59,7 +59,7 @@ export function OrdersPage({
     orders?: Order[]
     error?: string
   } | null>(null)
-  const requestKey = `${token}:${status}:${searchTerm}:${refreshKey}`
+  const requestKey = `${token}:${status}:${searchTerm}`
   const orders = result?.key === requestKey ? result.orders ?? [] : []
   const selectedOrder = result?.orders?.find((order) => order.id === selectedOrderId)
   const loading = result?.key !== requestKey

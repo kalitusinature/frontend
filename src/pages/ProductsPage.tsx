@@ -59,7 +59,7 @@ export function ProductsPage({
     categories?: Category[]
     error?: string
   } | null>(null)
-  const requestKey = `${token}:${refreshKey}`
+  const requestKey = `${token}`
   const products = result?.key === requestKey ? result.products ?? [] : []
   const categories = result?.key === requestKey ? result.categories ?? [] : []
   const loading = result?.key !== requestKey
@@ -95,7 +95,7 @@ export function ProductsPage({
     return () => {
       active = false
     }
-  }, [token, requestKey])
+  }, [token, requestKey, refreshKey])
 
   const openNew = () => {
     imageRequestId.current += 1
