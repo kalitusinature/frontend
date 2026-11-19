@@ -10,7 +10,6 @@ import {
   LoadingState,
   Modal,
   PageHeading,
-  PageLoadingScreen,
 } from '../components/ui'
 
 const blankCategory = (): CategoryInput => ({
@@ -119,7 +118,6 @@ export function CategoriesPage({
       {loading ? (
         <>
           <LoadingState label="Loading menu categories…" />
-          <PageLoadingScreen label="Loading menu categories…" />
         </>
       ) : categories.length ? (
         <div className="category-grid">

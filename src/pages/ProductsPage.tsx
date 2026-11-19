@@ -10,7 +10,6 @@ import {
   LoadingState,
   Modal,
   PageHeading,
-  PageLoadingScreen,
 } from '../components/ui'
 import { optimizeImage } from '../image'
 import { formatUGX } from '../utils'
@@ -252,7 +251,6 @@ export function ProductsPage({
       {loading ? (
         <>
           <LoadingState label="Loading the menu…" />
-          <PageLoadingScreen label="Loading the menu…" />
         </>
       ) : visibleProducts.length ? (
         <div className="menu-product-grid">

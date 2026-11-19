@@ -7,7 +7,6 @@ import {
   ErrorState,
   LoadingState,
   Modal,
-  PageLoadingScreen,
   CancellationModal,
   StatusPill,
 } from '../components/ui'
@@ -172,7 +171,6 @@ export function OrdersPage({
       {loading ? (
         <>
           <LoadingState label="Loading guest orders…" />
-          <PageLoadingScreen label="Loading guest orders…" />
         </>
       ) : orders.length ? (
         <>

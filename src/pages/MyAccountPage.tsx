@@ -7,7 +7,6 @@ import {
   FormField,
   LoadingState,
   PageHeading,
-  PageLoadingScreen,
 } from '../components/ui'
 
 type Props = {
@@ -221,7 +220,6 @@ export function MyAccountPage({ token, notify, onTokenChanged }: Props) {
       {loading && (
         <>
           <LoadingState label="Loading your account…" />
-          <PageLoadingScreen label="Loading your account…" />
         </>
       )}
       {!loading && account && (

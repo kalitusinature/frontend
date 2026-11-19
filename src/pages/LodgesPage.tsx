@@ -11,7 +11,6 @@ import {
   LoadingState,
   Modal,
   PageHeading,
-  PageLoadingScreen,
 } from '../components/ui'
 import { formatDate } from '../utils'
 
@@ -310,7 +309,6 @@ export function LodgesPage({
       {loading ? (
         <>
           <LoadingState label="Loading lodge inventory…" />
-          <PageLoadingScreen label="Loading lodge inventory…" />
         </>
       ) : lodges.length ? (
         <div className="lodge-grid">

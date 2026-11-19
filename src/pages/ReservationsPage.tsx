@@ -564,7 +564,7 @@ export function ReservationsPage({
           }
         />
       </div>
-      {(loading || calendarLoading) && (
+      {((loading && reservations.length === 0) || (calendarLoading && calendarReservations.length === 0)) && (
         <PageLoadingScreen
           label={calendarLoading ? 'Loading reservation calendar…' : 'Loading guest stays…'}
         />
