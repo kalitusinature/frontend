@@ -1081,6 +1081,27 @@
   min-width: 1160px;
 }
 
+.order-clickable-row {
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.order-clickable-row:hover,
+.order-clickable-row:focus {
+  background: #f7faf8;
+  outline: none;
+}
+
+.orders-mobile-card {
+  cursor: pointer;
+}
+
+.orders-mobile-card a,
+.orders-mobile-card button {
+  position: relative;
+  z-index: 1;
+}
+
 .order-table-cell,
 .order-payment-cell {
   display: grid;

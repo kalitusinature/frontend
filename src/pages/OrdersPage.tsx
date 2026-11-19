@@ -191,7 +191,20 @@ export function OrdersPage({
             <tbody>
               {orders.map((order) => {
                 return (
-                  <tr key={order.id}>
+                  <tr
+                    key={order.id}
+                    className="order-clickable-row"
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View order ${order.number}`}
+                    onClick={() => setSelectedOrderId(order.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        setSelectedOrderId(order.id)
+                      }
+                    }}
+                  >
                     <td>
                       <div className="order-id-group">
                         <span className="order-icon"><UtensilsCrossed size={17} /></span>
@@ -210,8 +223,8 @@ export function OrdersPage({
                     <td>
                       <div className="order-table-cell">
                         <strong>{order.guest_name}</strong>
-                        {order.email && <a href={`mailto:${order.email}`}>{order.email}</a>}
-                        <a href={`tel:${order.phone}`}>{order.phone}</a>
+                        {order.email && <a href={`mailto:${order.email}`} onClick={(event) => event.stopPropagation()}>{order.email}</a>}
+                        <a href={`tel:${order.phone}`} onClick={(event) => event.stopPropagation()}>{order.phone}</a>
                       </div>
                     </td>
                     <td className="orders-items-cell">
@@ -260,9 +273,10 @@ export function OrdersPage({
                             type="button"
                             disabled={workingId === order.id}
                             aria-label={`Mark ${order.number} paid`}
-                            onClick={() =>
+                            onClick={(event) => {
+                              event.stopPropagation()
                               void updateOrder(order, { payment_status: 'paid' })
-                            }
+                            }}
                           >
                             Unpaid · mark paid
                           </button>
@@ -296,7 +310,20 @@ export function OrdersPage({
           </div>
           <div className="orders-mobile-list">
             {orders.map((order) => (
-              <article className="orders-mobile-card" key={order.id}>
+              <article
+                className="orders-mobile-card"
+                key={order.id}
+                tabIndex={0}
+                role="button"
+                aria-label={`View order ${order.number}`}
+                onClick={() => setSelectedOrderId(order.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedOrderId(order.id)
+                  }
+                }}
+              >
                 <div className="orders-mobile-card-heading">
                   <div className="order-id-group">
                     <span className="order-icon"><UtensilsCrossed size={15} /></span>
@@ -340,7 +367,10 @@ export function OrdersPage({
                         className="payment-link"
                         type="button"
                         disabled={workingId === order.id}
-                        onClick={() => void updateOrder(order, { payment_status: 'paid' })}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void updateOrder(order, { payment_status: 'paid' })
+                        }}
                       >
                         Unpaid · mark paid
                       </button>
