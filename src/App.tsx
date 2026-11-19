@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  BedDouble,
-  ChevronDown,
-  ClipboardList,
-  LayoutDashboard,
+  CalendarDays,
+  Gauge,
   LogOut,
   Menu,
-  Tags,
-  UtensilsCrossed,
+  ReceiptText,
+  Salad,
+  Shapes,
+  TreePalm,
+  UserRound,
   X,
 } from 'lucide-react'
 import { ApiError, api } from './api'
@@ -17,9 +18,11 @@ import { LodgesPage } from './pages/LodgesPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { ReservationsPage } from './pages/ReservationsPage'
+import { MyAccountPage } from './pages/MyAccountPage'
 import { LoginPage } from './pages/LoginPage'
 import type { LoginResponse } from './types'
 import { InstallAppButton } from './components/InstallAppButton'
+import { PageLoadingScreen } from './components/ui'
 import './App.css'
 
 export type PageId =
@@ -29,17 +32,19 @@ export type PageId =
   | 'reservations'
   | 'categories'
   | 'lodges'
+  | 'account'
 
 const navigation = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'orders', label: 'Orders', icon: ClipboardList },
-  { id: 'products', label: 'Menu products', icon: UtensilsCrossed },
-  { id: 'reservations', label: 'Reservations', icon: BedDouble },
-  { id: 'categories', label: 'Categories', icon: Tags },
-  { id: 'lodges', label: 'Lodges & cottages', icon: BedDouble },
+  { id: 'dashboard', label: 'Dashboard', icon: Gauge },
+  { id: 'orders', label: 'Orders', icon: ReceiptText },
+  { id: 'products', label: 'Menu products', icon: Salad },
+  { id: 'reservations', label: 'Reservations', icon: CalendarDays },
+  { id: 'categories', label: 'Categories', icon: Shapes },
+  { id: 'lodges', label: 'Lodges & cottages', icon: TreePalm },
 ] as const
 
 function titleForPage(page: PageId): string {
+  if (page === 'account') return 'My account'
   return navigation.find((item) => item.id === page)?.label ?? 'Dashboard'
 }
 
@@ -55,7 +60,11 @@ function App() {
   const [username, setUsername] = useState(
     () => window.sessionStorage.getItem('kalitusi-admin-user') ?? '',
   )
-  const [activePage, setActivePage] = useState<PageId>('dashboard')
+  const [activePage, setActivePage] = useState<PageId>(() => {
+    const savedPage = window.sessionStorage.getItem('kalitusi-admin-page')
+    if (savedPage === 'account') return 'account'
+    return navigation.find(({ id }) => id === savedPage)?.id ?? 'dashboard'
+  })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notice, setNotice] = useState('')
   const [checkingToken, setCheckingToken] = useState(Boolean(token))
@@ -63,7 +72,7 @@ function App() {
   const [unreadOrders, setUnreadOrders] = useState(0)
   const [unreadReservations, setUnreadReservations] = useState(0)
   const previousIncomingCounts = useRef<IncomingCounts | null>(null)
-  const activePageRef = useRef<PageId>('dashboard')
+  const activePageRef = useRef<PageId>(activePage)
   const [todayLabel] = useState(() =>
     new Intl.DateTimeFormat('en-UG', {
       weekday: 'short',
@@ -80,15 +89,34 @@ function App() {
   }
 
   useEffect(() => {
+    window.sessionStorage.setItem('kalitusi-admin-page', activePage)
+  }, [activePage])
+
+  useEffect(() => {
     previousIncomingCounts.current = null
     if (!token) return
 
     let active = true
     let refreshing = false
+    let accountChecked = false
+    let passwordChangeRequired = false
     const refreshIncomingCounts = async () => {
-      if (refreshing) return
+      if (refreshing || passwordChangeRequired) return
       refreshing = true
       try {
+        if (!accountChecked) {
+          const account = await api.staffAccount(token)
+          if (!active) return
+          accountChecked = true
+          if (account.must_change_password) {
+            passwordChangeRequired = true
+            activePageRef.current = 'account'
+            setActivePage('account')
+            setUnreadOrders(0)
+            setUnreadReservations(0)
+            return
+          }
+        }
         const data = await api.dashboard(token)
         if (!active) return
         const counts = {
@@ -155,8 +183,14 @@ function App() {
     setAuthError('')
     setUnreadOrders(0)
     setUnreadReservations(0)
-    activePageRef.current = 'dashboard'
-    setActivePage('dashboard')
+    const page = result.must_change_password ? 'account' : 'dashboard'
+    activePageRef.current = page
+    setActivePage(page)
+  }
+
+  const handleTokenChanged = (nextToken: string) => {
+    window.sessionStorage.setItem('kalitusi-admin-token', nextToken)
+    setToken(nextToken)
   }
 
   const handleLogout = async () => {
@@ -182,7 +216,7 @@ function App() {
   }
 
   if (checkingToken) {
-    return <div className="app-boot">Connecting to Kalitusi…</div>
+    return <PageLoadingScreen label="Checking your secure session…" delay={0} />
   }
 
   if (!token) {
@@ -252,13 +286,27 @@ function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="profile-button" onClick={handleLogout}>
+          <button
+            className="profile-button"
+            aria-label="Open My account"
+            onClick={() => {
+              navigateToPage('account')
+              setSidebarOpen(false)
+            }}
+          >
             <span className="avatar">{username.slice(0, 1).toUpperCase() || 'A'}</span>
             <span className="profile-copy">
               <strong>{username || 'Resort admin'}</strong>
               <small>Administrator</small>
             </span>
-            <LogOut size={17} />
+            <UserRound size={17} />
+          </button>
+          <button
+            className="sidebar-logout-button"
+            onClick={() => void handleLogout()}
+          >
+            <LogOut size={16} />
+            <span>Sign out</span>
           </button>
         </div>
       </aside>
@@ -280,12 +328,16 @@ function App() {
           <div className="topbar-right">
             <InstallAppButton />
             <span className="today-label">{todayLabel}</span>
-            <button className="user-chip" onClick={() => void handleLogout()}>
+            <button
+              className="user-chip"
+              aria-label="Open My account"
+              onClick={() => navigateToPage('account')}
+            >
               <span className="avatar avatar-small">
                 {username.slice(0, 1).toUpperCase() || 'A'}
               </span>
               <span>{username || 'Admin'}</span>
-              <ChevronDown size={15} />
+              <UserRound size={15} />
             </button>
           </div>
         </header>
@@ -302,6 +354,13 @@ function App() {
           {activePage === 'reservations' && <ReservationsPage {...pageProps} />}
           {activePage === 'categories' && <CategoriesPage {...pageProps} />}
           {activePage === 'lodges' && <LodgesPage {...pageProps} />}
+          {activePage === 'account' && (
+            <MyAccountPage
+              token={token}
+              notify={setNotice}
+              onTokenChanged={handleTokenChanged}
+            />
+          )}
         </div>
       </main>
       {notice && (

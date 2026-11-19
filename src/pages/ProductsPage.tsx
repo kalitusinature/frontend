@@ -10,6 +10,7 @@ import {
   LoadingState,
   Modal,
   PageHeading,
+  PageLoadingScreen,
 } from '../components/ui'
 import { optimizeImage } from '../image'
 import { formatUGX } from '../utils'
@@ -249,7 +250,10 @@ export function ProductsPage({
       )}
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}
       {loading ? (
-        <LoadingState label="Loading the menu…" />
+        <>
+          <LoadingState label="Loading the menu…" />
+          <PageLoadingScreen label="Loading the menu…" />
+        </>
       ) : visibleProducts.length ? (
         <div className="menu-product-grid">
           {visibleProducts.map((product) => (

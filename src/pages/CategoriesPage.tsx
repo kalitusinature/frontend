@@ -10,6 +10,7 @@ import {
   LoadingState,
   Modal,
   PageHeading,
+  PageLoadingScreen,
 } from '../components/ui'
 
 const blankCategory = (): CategoryInput => ({
@@ -116,7 +117,10 @@ export function CategoriesPage({
       </div>
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}
       {loading ? (
-        <LoadingState label="Loading menu categories…" />
+        <>
+          <LoadingState label="Loading menu categories…" />
+          <PageLoadingScreen label="Loading menu categories…" />
+        </>
       ) : categories.length ? (
         <div className="category-grid">
           {categories.map((category) => (

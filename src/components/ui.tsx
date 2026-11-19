@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
 export function PageHeading({
@@ -29,6 +29,46 @@ export function LoadingState({ label = 'Loading data…' }: { label?: string }) 
     <div className="loading-state">
       <span className="spinner" />
       <span>{label}</span>
+    </div>
+  )
+}
+
+export function PageLoadingScreen({ label, delay = 350 }: { label: string; delay?: number }) {
+  const [visible, setVisible] = useState(delay === 0)
+  const [serverWaking, setServerWaking] = useState(false)
+
+  useEffect(() => {
+    const revealTimer = window.setTimeout(() => setVisible(true), delay)
+    const slowTimer = window.setTimeout(() => setServerWaking(true), 5000)
+    return () => {
+      window.clearTimeout(revealTimer)
+      window.clearTimeout(slowTimer)
+    }
+  }, [delay])
+
+  if (!visible) return null
+
+  return (
+    <div className="page-loading-screen" role="status" aria-live="polite">
+      <div className="page-loading-card">
+        <img
+          className="page-loading-logo"
+          src={`${import.meta.env.BASE_URL}Kalitusi_Nature_Resort_Sunset_Logo.png`}
+          alt="Kalitusi Nature Resort"
+        />
+        <span className="page-loading-eyebrow">RESORT OPERATIONS</span>
+        <span className="page-loading-spinner" aria-hidden="true" />
+        <h1>Getting your workspace ready</h1>
+        <p className="page-loading-label">{label}</p>
+        <div className="page-loading-track" aria-hidden="true">
+          <span />
+        </div>
+        <p className="page-loading-note">
+          {serverWaking
+            ? 'Render may be waking the server. The first load can take up to a minute; please keep this page open.'
+            : 'Connecting securely to your resort data…'}
+        </p>
+      </div>
     </div>
   )
 }

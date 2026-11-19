@@ -11,6 +11,7 @@ import {
   LoadingState,
   Modal,
   PageHeading,
+  PageLoadingScreen,
 } from '../components/ui'
 import { formatDate } from '../utils'
 
@@ -307,7 +308,10 @@ export function LodgesPage({
       </div>
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}
       {loading ? (
-        <LoadingState label="Loading lodge inventory…" />
+        <>
+          <LoadingState label="Loading lodge inventory…" />
+          <PageLoadingScreen label="Loading lodge inventory…" />
+        </>
       ) : lodges.length ? (
         <div className="lodge-grid">
           {lodges.map((lodge) => (
@@ -367,7 +371,7 @@ export function LodgesPage({
           className="form-grid lodge-availability-form"
           onSubmit={(event) => void saveBlockout(event)}
         >
-          <FormField label="Lodge or cottage">
+          <FormField label="Lodge or cottage" className="blockout-lodge-field">
             <select
               required
               value={blockoutDraft.lodge || ''}
@@ -381,7 +385,7 @@ export function LodgesPage({
               ))}
             </select>
           </FormField>
-          <FormField label="Start date">
+          <FormField label="Start date" className="blockout-start-date">
             <input
               required
               type="date"
@@ -391,7 +395,7 @@ export function LodgesPage({
               }
             />
           </FormField>
-          <FormField label="End date (exclusive)">
+          <FormField label="End date (exclusive)" className="blockout-end-date">
             <input
               required
               type="date"
@@ -402,7 +406,7 @@ export function LodgesPage({
               }
             />
           </FormField>
-          <FormField label="Reason (optional)">
+          <FormField label="Reason (optional)" className="blockout-reason-field">
             <input
               maxLength={160}
               value={blockoutDraft.reason}

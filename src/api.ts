@@ -14,6 +14,10 @@ import type {
   Reservation,
   ReservationInput,
   ReservationSource,
+  StaffAccount,
+  StaffCreateInput,
+  StaffUser,
+  TemporaryPasswordResponse,
 } from './types'
 
 const API_BASE_URL = (
@@ -104,6 +108,55 @@ export const api = {
   },
   logout(token: string) {
     return request<void>('/auth/logout/', token, { method: 'POST' })
+  },
+  staffAccount(token: string) {
+    return request<StaffAccount>('/staff/account/', token)
+  },
+  updateStaffAccount(
+    token: string,
+    updates: Pick<StaffAccount, 'email' | 'first_name' | 'last_name'>,
+  ) {
+    return request<StaffAccount>('/staff/account/', token, {
+      method: 'PATCH',
+      body: jsonBody(updates),
+    })
+  },
+  changeStaffPassword(token: string, currentPassword: string, newPassword: string) {
+    return request<{ token: string }>('/staff/account/password/', token, {
+      method: 'POST',
+      body: jsonBody({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    })
+  },
+  verifyStaffPassword(token: string, currentPassword: string) {
+    return request<void>('/staff/account/password/verify/', token, {
+      method: 'POST',
+      body: jsonBody({ current_password: currentPassword }),
+    })
+  },
+  staffUsers(token: string) {
+    return request<StaffUser[]>('/staff/accounts/', token)
+  },
+  createStaffUser(token: string, input: StaffCreateInput) {
+    return request<TemporaryPasswordResponse>('/staff/accounts/', token, {
+      method: 'POST',
+      body: jsonBody(input),
+    })
+  },
+  setStaffUserActive(token: string, id: number, isActive: boolean) {
+    return request<StaffUser>(`/staff/accounts/${id}/`, token, {
+      method: 'PATCH',
+      body: jsonBody({ is_active: isActive }),
+    })
+  },
+  resetStaffUserPassword(token: string, id: number) {
+    return request<TemporaryPasswordResponse>(
+      `/staff/accounts/${id}/reset-password/`,
+      token,
+      { method: 'POST' },
+    )
   },
   dashboard(token: string) {
     return request<DashboardData>('/staff/dashboard/', token)

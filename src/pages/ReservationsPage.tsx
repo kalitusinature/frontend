@@ -29,6 +29,7 @@ import {
   LoadingState,
   Modal,
   PageHeading,
+  PageLoadingScreen,
   StatusPill,
 } from '../components/ui'
 import { formatDate, formatDateTime } from '../utils'
@@ -531,6 +532,11 @@ export function ReservationsPage({
           }
         />
       </div>
+      {(loading || calendarLoading) && (
+        <PageLoadingScreen
+          label={calendarLoading ? 'Loading reservation calendar…' : 'Loading guest stays…'}
+        />
+      )}
       {dashboard && (
         <div className="reservation-metrics">
           {[
@@ -792,7 +798,7 @@ export function ReservationsPage({
                 <input maxLength={254} type="email" value={draft.email} onChange={(event) => setDraft({ ...draft, email: event.target.value })} />
               </FormField>
             </div>
-            <div className="form-grid">
+            <div className="form-grid reservation-date-fields">
               <FormField label="Check-in">
                 <input required type="date" value={draft.check_in} onChange={(event) => setDraft({ ...draft, check_in: event.target.value })} />
               </FormField>

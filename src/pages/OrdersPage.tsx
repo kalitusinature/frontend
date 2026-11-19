@@ -7,6 +7,7 @@ import {
   ErrorState,
   LoadingState,
   Modal,
+  PageLoadingScreen,
   StatusPill,
 } from '../components/ui'
 import { formatDateTime, formatUGX } from '../utils'
@@ -153,7 +154,10 @@ export function OrdersPage({
 
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}
       {loading ? (
-        <LoadingState label="Loading guest orders…" />
+        <>
+          <LoadingState label="Loading guest orders…" />
+          <PageLoadingScreen label="Loading guest orders…" />
+        </>
       ) : orders.length ? (
         <>
           <div className="table-wrap orders-desktop-table">

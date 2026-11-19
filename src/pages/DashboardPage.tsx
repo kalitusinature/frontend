@@ -16,6 +16,7 @@ import {
   ErrorState,
   LoadingState,
   PageHeading,
+  PageLoadingScreen,
   StatusPill,
 } from '../components/ui'
 import type { PageId } from '../App'
@@ -96,7 +97,10 @@ export function DashboardPage({
       </div>
       {error && <ErrorState message={error} retry={load} />}
       {loading && !data ? (
-        <LoadingState label="Gathering your resort overview…" />
+        <>
+          <LoadingState label="Gathering your resort overview…" />
+          <PageLoadingScreen label="Gathering your resort overview…" />
+        </>
       ) : data ? (
         <>
           <div className="metric-grid">

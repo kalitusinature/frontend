@@ -152,6 +152,41 @@ export type LodgeInput = Omit<Lodge, 'id' | 'slug'>
 export interface LoginResponse {
   token: string
   username: string
+  must_change_password: boolean
+}
+
+export interface StaffAccount {
+  username: string
+  email: string
+  first_name: string
+  last_name: string
+  is_superuser: boolean
+  must_change_password: boolean
+}
+
+export interface StaffUser {
+  id: number
+  username: string
+  email: string
+  first_name: string
+  last_name: string
+  is_active: boolean
+  is_superuser: boolean
+  date_joined: string
+  last_login: string | null
+  must_change_password: boolean
+}
+
+export interface StaffCreateInput {
+  username: string
+  email: string
+  first_name: string
+  last_name: string
+}
+
+export interface TemporaryPasswordResponse {
+  staff: StaffUser
+  temporary_password: string
 }
 
 export type ProductInput = Omit<
