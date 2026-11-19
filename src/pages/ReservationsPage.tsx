@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
+  Ban,
   BedDouble,
   CalendarDays,
   Check,
@@ -24,6 +25,7 @@ import type {
 import {
   EmptyState,
   ErrorState,
+  CancellationModal,
   FormActions,
   FormField,
   LoadingState,
@@ -110,6 +112,7 @@ export function ReservationsPage({
   const [ordering, setOrdering] = useState<'-created_at' | 'check_in'>('-created_at')
   const [page, setPage] = useState(1)
   const [workingId, setWorkingId] = useState<number | null>(null)
+  const [cancellationReservation, setCancellationReservation] = useState<Reservation | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
   const [lodges, setLodges] = useState<Lodge[]>([])
@@ -311,26 +314,47 @@ export function ReservationsPage({
     }
   }
 
-  const updateStatus = async (reservation: Reservation, next: ReservationStatus) => {
-    const action = next === 'declined' ? 'decline' : next === 'cancelled' ? 'cancel' : 'mark'
-    if (['declined', 'cancelled'].includes(next) && !window.confirm(`${action[0].toUpperCase()}${action.slice(1)} reservation ${reservation.reference}?`)) {
-      return
+  const updateStatus = async (
+    reservation: Reservation,
+    next: ReservationStatus,
+    cancellationReason?: string,
+  ): Promise<boolean> => {
+    if (
+      next === 'declined' &&
+      !window.confirm(`Decline reservation ${reservation.reference}?`)
+    ) {
+      return false
     }
     setWorkingId(reservation.id)
     setActionError('')
     try {
-      await api.updateReservation(token, reservation.id, { status: next })
+      await api.updateReservation(token, reservation.id, {
+        status: next,
+        ...(cancellationReason !== undefined && { cancellation_reason: cancellationReason }),
+      })
       setRefreshKey((value) => value + 1)
-      notify(`Reservation ${reservation.reference} marked ${next}.`)
+      notify(
+        next === 'cancelled'
+          ? `Reservation ${reservation.reference} cancelled.`
+          : `Reservation ${reservation.reference} marked ${next}.`,
+      )
+      return true
     } catch (requestError) {
       setActionError(
         requestError instanceof ApiError
           ? requestError.message
           : 'Could not update this reservation.',
       )
+      return false
     } finally {
       setWorkingId(null)
     }
+  }
+
+  const cancelReservation = async (reason: string) => {
+    if (!cancellationReservation) return
+    const updated = await updateStatus(cancellationReservation, 'cancelled', reason)
+    if (updated) setCancellationReservation(null)
   }
 
   const deleteReservation = async (reservation: Reservation) => {
@@ -454,6 +478,11 @@ export function ReservationsPage({
             {reservation.note && `“${reservation.note}”`}
           </p>
         )}
+        {reservation.cancellation_reason && (
+          <p className="reservation-cancellation-reason">
+            <strong>Cancellation reason:</strong> {reservation.cancellation_reason}
+          </p>
+        )}
         <div className="reservation-meta">
           <span>Source: {sourceOptions.find((option) => option.value === reservation.source)?.label}</span>
           <span>Updated {formatDateTime(reservation.updated_at)}</span>
@@ -489,9 +518,12 @@ export function ReservationsPage({
               <button
                 className="button button-outline button-danger"
                 disabled={workingId === reservation.id}
-                onClick={() => void updateStatus(reservation, 'cancelled')}
+                onClick={() => {
+                  setActionError('')
+                  setCancellationReservation(reservation)
+                }}
               >
-                <X size={15} /> Cancel
+                <Ban size={15} /> Cancel
               </button>
               <button
                 className="button button-primary button-small"
@@ -822,7 +854,7 @@ export function ReservationsPage({
               </FormField>
               <FormField label="Booking status">
                 <select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as ReservationStatus })}>
-                  {filters.filter((filter) => filter.value !== 'all').map((filter) => (
+                  {filters.filter((filter) => filter.value !== 'all' && (filter.value !== 'cancelled' || editing?.status === 'cancelled')).map((filter) => (
                     <option key={filter.value} value={filter.value}>{filter.label}</option>
                   ))}
                 </select>
@@ -891,6 +923,11 @@ export function ReservationsPage({
                       {reservation.note}
                     </p>
                   )}
+                  {reservation.cancellation_reason && (
+                    <p className="reservation-cancellation-reason">
+                      <strong>Cancellation reason:</strong> {reservation.cancellation_reason}
+                    </p>
+                  )}
                   <button
                     type="button"
                     className="button button-outline calendar-day-booking-edit"
@@ -911,6 +948,18 @@ export function ReservationsPage({
             />
           )}
         </Modal>
+      )}
+      {cancellationReservation && (
+        <CancellationModal
+          itemType="reservation"
+          reference={cancellationReservation.reference}
+          saving={workingId === cancellationReservation.id}
+          error={actionError}
+          onClose={() => {
+            if (workingId !== cancellationReservation.id) setCancellationReservation(null)
+          }}
+          onConfirm={(reason) => void cancelReservation(reason)}
+        />
       )}
     </>
   )

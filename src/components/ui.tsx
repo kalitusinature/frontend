@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { AlertTriangle, X } from 'lucide-react'
 
 export function PageHeading({
   eyebrow,
@@ -162,6 +162,71 @@ export function Modal({
         {children}
       </section>
     </div>
+  )
+}
+
+export function CancellationModal({
+  itemType,
+  reference,
+  saving,
+  error,
+  onClose,
+  onConfirm,
+}: {
+  itemType: 'order' | 'reservation'
+  reference: string
+  saving: boolean
+  error: string
+  onClose: () => void
+  onConfirm: (reason: string) => void
+}) {
+  const [reason, setReason] = useState('')
+
+  return (
+    <Modal
+      className="cancellation-modal"
+      title={`Cancel ${itemType}?`}
+      subtitle={`${reference} will be marked as cancelled.`}
+      onClose={onClose}
+    >
+      <form
+        className="cancellation-form"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (reason.trim()) onConfirm(reason.trim())
+        }}
+      >
+        <div className="cancellation-notice">
+          <AlertTriangle size={18} aria-hidden="true" />
+          <p>This action will be recorded. Enter a reason to continue.</p>
+        </div>
+        <FormField label="Reason (required)">
+          <textarea
+            required
+            autoFocus
+            rows={4}
+            maxLength={1000}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Explain why this is being cancelled"
+          />
+        </FormField>
+        <span className="cancellation-character-count">{reason.length}/1000</span>
+        {error && <div className="form-error" role="alert">{error}</div>}
+        <div className="cancellation-actions">
+          <button type="button" className="button button-outline" onClick={onClose} disabled={saving}>
+            Keep {itemType}
+          </button>
+          <button
+            type="submit"
+            className="button button-danger button-outline"
+            disabled={saving || !reason.trim()}
+          >
+            {saving ? 'Cancelling…' : `Confirm cancellation`}
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 

@@ -1746,6 +1746,28 @@
   line-height: 1.5;
 }
 
+.order-cancellation-reason,
+.reservation-cancellation-reason {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #f0dfc8;
+  border-radius: 8px;
+  color: #765d3c;
+  background: #fffaf2;
+  font-size: 11px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.reservation-cancellation-reason {
+  margin-top: 10px;
+}
+
+.order-cancellation-reason strong,
+.reservation-cancellation-reason strong {
+  color: #624729;
+}
+
 .order-detail-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1762,6 +1784,64 @@
   border-color: #e2b6b3;
   color: #913b36;
   background: #fff7f6;
+}
+
+.cancellation-modal {
+  width: min(100%, 470px);
+}
+
+.cancellation-form {
+  display: grid;
+  gap: 12px;
+}
+
+.cancellation-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #f0dfc8;
+  border-radius: 9px;
+  color: #795b32;
+  background: #fffaf2;
+}
+
+.cancellation-notice svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #b38339;
+}
+
+.cancellation-notice p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.cancellation-character-count {
+  justify-self: end;
+  margin-top: -8px;
+  color: #8a9790;
+  font-size: 10px;
+}
+
+.cancellation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.cancellation-actions .button-danger {
+  border-color: #e8c9c5;
+  color: #9d5149;
+  background: #fff8f7;
+}
+
+.cancellation-actions .button-danger:hover:not(:disabled) {
+  border-color: #d7a8a3;
+  color: #873e38;
+  background: #fff0ee;
 }
 
 .editor-form,

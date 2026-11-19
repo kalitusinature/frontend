@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Check, Search, UtensilsCrossed } from 'lucide-react'
+import { Ban, Check, Search, UtensilsCrossed } from 'lucide-react'
 import { ApiError, api } from '../api'
 import type { Order, OrderStatus } from '../types'
 import {
@@ -8,6 +8,7 @@ import {
   LoadingState,
   Modal,
   PageLoadingScreen,
+  CancellationModal,
   StatusPill,
 } from '../components/ui'
 import { formatDateTime, formatUGX } from '../utils'
@@ -50,6 +51,7 @@ export function OrdersPage({
   const [searchTerm, setSearchTerm] = useState('')
   const [workingId, setWorkingId] = useState<number | null>(null)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
+  const [cancellationOrder, setCancellationOrder] = useState<Order | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
   const [result, setResult] = useState<{
@@ -94,8 +96,12 @@ export function OrdersPage({
 
   const updateOrder = async (
     order: Order,
-    updates: { status?: OrderStatus; payment_status?: 'unpaid' | 'paid' },
-  ) => {
+    updates: {
+      status?: OrderStatus
+      payment_status?: 'unpaid' | 'paid'
+      cancellation_reason?: string
+    },
+  ): Promise<boolean> => {
     setWorkingId(order.id)
     setActionError('')
     try {
@@ -104,22 +110,32 @@ export function OrdersPage({
       notify(
         updates.payment_status
           ? 'Payment status updated.'
+          : updates.status === 'cancelled'
+            ? `${order.number} cancelled.`
           : `${order.number} updated successfully.`,
       )
+      return true
     } catch (requestError) {
       setActionError(
         requestError instanceof ApiError
           ? requestError.message
           : 'Could not update this order.',
       )
+      return false
     } finally {
       setWorkingId(null)
     }
   }
 
-  const cancelOrder = (order: Order) => {
-    if (window.confirm(`Cancel order ${order.number}?`)) {
-      void updateOrder(order, { status: 'cancelled' })
+  const cancelOrder = async (reason: string) => {
+    if (!cancellationOrder) return
+    const updated = await updateOrder(cancellationOrder, {
+      status: 'cancelled',
+      cancellation_reason: reason,
+    })
+    if (updated) {
+      setCancellationOrder(null)
+      setSelectedOrderId(null)
     }
   }
 
@@ -341,6 +357,11 @@ export function OrdersPage({
                     ))}
                   </div>
                   {order.note && <p className="orders-mobile-note">Note: {order.note}</p>}
+                  {order.cancellation_reason && (
+                    <p className="order-cancellation-reason">
+                      <strong>Cancellation reason:</strong> {order.cancellation_reason}
+                    </p>
+                  )}
                 </div>
                 <div className="orders-mobile-actions">
                   <button
@@ -364,7 +385,7 @@ export function OrdersPage({
           />
         </div>
       )}
-      {selectedOrder && (
+      {selectedOrder && !cancellationOrder && (
         <Modal
           title={selectedOrder.number}
           subtitle={`Placed ${formatDateTime(selectedOrder.created_at)}`}
@@ -427,6 +448,11 @@ export function OrdersPage({
           {selectedOrder.note && (
             <p className="order-detail-note"><strong>Guest note:</strong> {selectedOrder.note}</p>
           )}
+          {selectedOrder.cancellation_reason && (
+            <p className="order-cancellation-reason">
+              <strong>Cancellation reason:</strong> {selectedOrder.cancellation_reason}
+            </p>
+          )}
           <div className="order-detail-actions">
             {nextOrderStatus[selectedOrder.status] && (
               <button
@@ -463,13 +489,29 @@ export function OrdersPage({
                 type="button"
                 className="button button-outline order-cancel-button"
                 disabled={workingId === selectedOrder.id}
-                onClick={() => cancelOrder(selectedOrder)}
+                onClick={() => {
+                  setActionError('')
+                  setCancellationOrder(selectedOrder)
+                }}
               >
+                <Ban size={15} />
                 Cancel order
               </button>
             )}
           </div>
         </Modal>
+      )}
+      {cancellationOrder && (
+        <CancellationModal
+          itemType="order"
+          reference={cancellationOrder.number}
+          saving={workingId === cancellationOrder.id}
+          error={actionError}
+          onClose={() => {
+            if (workingId !== cancellationOrder.id) setCancellationOrder(null)
+          }}
+          onConfirm={(reason) => void cancelOrder(reason)}
+        />
       )}
     </div>
   )

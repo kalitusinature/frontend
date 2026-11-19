@@ -171,7 +171,11 @@ export const api = {
   updateOrder(
     token: string,
     id: number,
-    updates: { status?: OrderStatus; payment_status?: 'unpaid' | 'paid' },
+    updates: {
+      status?: OrderStatus
+      payment_status?: 'unpaid' | 'paid'
+      cancellation_reason?: string
+    },
   ) {
     return request<Pick<Order, 'status' | 'payment_status'>>(`/staff/orders/${id}/`, token, {
       method: 'PATCH',
@@ -269,7 +273,11 @@ export const api = {
       body: jsonBody(input),
     })
   },
-  updateReservation(token: string, id: number, updates: Partial<ReservationInput>) {
+  updateReservation(
+    token: string,
+    id: number,
+    updates: Partial<ReservationInput> & { cancellation_reason?: string },
+  ) {
     return request<Reservation>(`/staff/reservations/${id}/`, token, {
       method: 'PATCH',
       body: jsonBody(updates),

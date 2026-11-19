@@ -75,6 +75,7 @@ export interface Order {
   payment_method: 'cash' | 'card_at_counter'
   payment_status: 'unpaid' | 'paid'
   note: string
+  cancellation_reason: string
   total_ugx: number
   created_at: string
   items: OrderItem[]
@@ -94,6 +95,7 @@ export interface Reservation {
   adults: number
   children: number
   note: string
+  cancellation_reason: string
   occasion: string
   source: ReservationSource
   created_at: string
