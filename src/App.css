@@ -5320,7 +5320,41 @@
   }
 
   .orders-mobile-summary {
-    gap: 10px 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 9px 0;
+  }
+
+  .orders-mobile-summary .orders-mobile-field:nth-child(2),
+  .orders-mobile-summary .orders-mobile-field:nth-child(1) a,
+  .orders-mobile-items,
+  .orders-mobile-actions,
+  .orders-mobile-note,
+  .order-cancellation-reason {
+    display: none;
+  }
+
+  .orders-mobile-summary .orders-mobile-field:nth-child(1) {
+    grid-column: 1;
+  }
+
+  .orders-mobile-summary .orders-mobile-field:nth-child(3) {
+    grid-column: 2;
+  }
+
+  .orders-mobile-summary .orders-mobile-field:nth-child(4) {
+    grid-column: 3;
+  }
+
+  .orders-mobile-card-heading {
+    padding-bottom: 8px;
+  }
+
+  .orders-mobile-card .status-pill {
+    max-width: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
