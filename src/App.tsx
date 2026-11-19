@@ -320,6 +320,13 @@ function App() {
           >
             <Menu size={21} />
           </button>
+          <div className="mobile-workspace-brand">
+            <img
+              src={`${import.meta.env.BASE_URL}Kalitusi_Nature_Resort_Sunset_Logo.png`}
+              alt="Kalitusi Nature Resort"
+            />
+            <span>Kalitusi</span>
+          </div>
           <div className="breadcrumb">
             <span>Workspace</span>
             <span className="breadcrumb-divider">/</span>

@@ -384,6 +384,10 @@
   display: none;
 }
 
+.mobile-workspace-brand {
+  display: none;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -5883,5 +5887,48 @@
 
   .page-loading-track span {
     width: 100%;
+  }
+}
+
+@media (max-width: 780px) {
+  .mobile-workspace-brand {
+    display: flex;
+    flex: 0 0 auto;
+    order: 1;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .mobile-workspace-brand img {
+    display: block;
+    width: 35px;
+    height: 35px;
+    border: 1px solid #e4ebe4;
+    border-radius: 9px;
+    background: #fff;
+    object-fit: cover;
+  }
+
+  .mobile-workspace-brand span {
+    color: #263d32;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+  }
+
+  .breadcrumb {
+    display: none;
+  }
+
+  .topbar-right {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 370px) {
+  .mobile-workspace-brand span {
+    display: none;
   }
 }
