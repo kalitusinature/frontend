@@ -25,6 +25,14 @@ const API_BASE_URL = (
   'https://api.kalitusi.com/api/v1'
 ).replace(/\/+$/, '')
 
+export interface PushSubscriptionPayload {
+  endpoint: string
+  keys: {
+    p256dh: string
+    auth: string
+  }
+}
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -111,6 +119,21 @@ export const api = {
   },
   staffAccount(token: string) {
     return request<StaffAccount>('/staff/account/', token)
+  },
+  pushVapidPublicKey(token: string) {
+    return request<{ public_key: string }>('/staff/push/vapid-public-key/', token)
+  },
+  savePushSubscription(token: string, subscription: PushSubscriptionPayload) {
+    return request<{ enabled: boolean }>('/staff/push/subscriptions/', token, {
+      method: 'POST',
+      body: jsonBody(subscription),
+    })
+  },
+  deletePushSubscription(token: string, endpoint: string) {
+    return request<void>('/staff/push/subscriptions/', token, {
+      method: 'DELETE',
+      body: jsonBody({ endpoint }),
+    })
   },
   updateStaffAccount(
     token: string,

@@ -97,6 +97,25 @@ function App() {
   }, [activePage])
 
   useEffect(() => {
+    if (!token || !('serviceWorker' in navigator)) return
+
+    const handleNotificationClick = (event: MessageEvent<unknown>) => {
+      const message = event.data as { type?: string; page?: string } | null
+      if (message?.type !== 'push-notification-click') return
+      if (message.page !== 'orders' && message.page !== 'reservations') return
+      activePageRef.current = message.page
+      setActivePage(message.page)
+      if (message.page === 'orders') setUnreadOrders(0)
+      if (message.page === 'reservations') setUnreadReservations(0)
+    }
+
+    navigator.serviceWorker.addEventListener('message', handleNotificationClick)
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleNotificationClick)
+    }
+  }, [token])
+
+  useEffect(() => {
     previousIncomingCounts.current = null
     if (!token) return
 
@@ -104,30 +123,6 @@ function App() {
     let refreshing = false
     let accountChecked = false
     let passwordChangeRequired = false
-    const showIncomingNotification = (
-      title: string,
-      body: string,
-      page: 'orders' | 'reservations',
-    ) => {
-      if (notificationPermission !== 'granted') return
-      try {
-        const notification = new Notification(title, {
-          body,
-          icon: `${import.meta.env.BASE_URL}icons/icon-192.png`,
-        })
-        notification.onclick = () => {
-          window.focus()
-          activePageRef.current = page
-          setActivePage(page)
-          if (page === 'orders') setUnreadOrders(0)
-          if (page === 'reservations') setUnreadReservations(0)
-          notification.close()
-        }
-      } catch (error: unknown) {
-        console.error('Could not display an incoming admin notification.', error)
-        setNotice('Could not display a browser notification. Check your browser settings.')
-      }
-    }
     const refreshIncomingCounts = async () => {
       if (refreshing || passwordChangeRequired) return
       refreshing = true
@@ -167,20 +162,6 @@ function App() {
           setUnreadReservations(
             (unread) => Math.min(unread, counts.reservations) + newReservations,
           )
-          if (newOrders > 0) {
-            showIncomingNotification(
-              'New food order',
-              `${newOrders} new order${newOrders === 1 ? '' : 's'} need attention.`,
-              'orders',
-            )
-          }
-          if (newReservations > 0) {
-            showIncomingNotification(
-              'New reservation request',
-              `${newReservations} reservation${newReservations === 1 ? '' : 's'} awaiting review.`,
-              'reservations',
-            )
-          }
         }
         previousIncomingCounts.current = counts
         setAuthError('')
@@ -215,7 +196,7 @@ function App() {
       active = false
       window.clearInterval(refreshTimer)
     }
-  }, [token, notificationPermission])
+  }, [token])
 
   const handleLogin = (result: LoginResponse) => {
     window.sessionStorage.setItem('kalitusi-admin-token', result.token)
@@ -377,6 +358,7 @@ function App() {
           <div className="topbar-right">
             <InstallAppButton />
             <BrowserNotificationsButton
+              token={token}
               permission={notificationPermission}
               onPermissionChange={setNotificationPermission}
               notify={setNotice}

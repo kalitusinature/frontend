@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kalitusi-admin-v4'
+const CACHE_NAME = 'kalitusi-admin-v5'
 const APP_SHELL = self.registration.scope
 const scopedUrl = (path) => new URL(path, self.registration.scope).href
 
@@ -31,6 +31,51 @@ self.addEventListener('activate', (event) => {
         ),
       )
       .then(() => self.clients.claim()),
+  )
+})
+
+self.addEventListener('push', (event) => {
+  let payload = {}
+  try {
+    payload = event.data ? event.data.json() : {}
+  } catch (error) {
+    console.error('Could not parse an admin push message.', error)
+  }
+  if (!payload || typeof payload !== 'object') payload = {}
+
+  const title =
+    typeof payload.title === 'string' ? payload.title : 'Kalitusi admin alert'
+  const body =
+    typeof payload.body === 'string' ? payload.body : 'There is a new resort update.'
+  const page =
+    payload.page === 'orders' || payload.page === 'reservations'
+      ? payload.page
+      : 'dashboard'
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: scopedUrl('icons/icon-192.png'),
+      badge: scopedUrl('icons/icon-192.png'),
+      tag: typeof payload.tag === 'string' ? payload.tag : undefined,
+      data: { page },
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  const page = event.notification.data?.page
+  event.notification.close()
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (new URL(client.url).origin !== self.location.origin) continue
+        void client.focus()
+        client.postMessage({ type: 'push-notification-click', page })
+        return
+      }
+      return self.clients.openWindow(APP_SHELL)
+    }),
   )
 })
 

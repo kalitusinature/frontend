@@ -24,10 +24,13 @@ shell and static assets are available offline after the first visit, but staff
 sign-in and resort data still require a connection to the API.
 
 After 30 minutes in the signed-in portal, an install reminder appears if the
-app is not installed. Browser notifications require staff to select **Enable
-alerts** and grant permission. While the portal is open, it checks every 30
-seconds for new orders and pending reservations and sends browser notifications
-when their counts increase. Background push notifications are not configured.
+app is not installed. To enable background push, each staff member selects
+**Enable push** and grants browser permission. The backend must have its VAPID
+environment variables configured; subscriptions are saved per staff account
+and device. New orders and pending reservation requests are delivered to all
+active subscribed staff devices, including when the portal is not open. Push
+delivery still depends on browser/OS settings and network connectivity. iOS
+users must install the portal to the Home Screen first.
 
 ## GitHub Pages deployment
 
