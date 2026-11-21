@@ -27,12 +27,12 @@ sign-in and resort data still require a connection to the API.
 
 The `frontend` repository is configured to build and deploy from the `main`
 branch with GitHub Actions. In repository **Settings → Pages**, choose
-**GitHub Actions** as the build and deployment source. Successful deployments
-will be available at:
+**GitHub Actions** as the build and deployment source.
 
-`https://kalitusinature.github.io/frontend/`
+- **Default project site:** `https://kalitusinature.github.io/frontend/` (build with `VITE_BASE=/frontend/`)
+- **Custom domain (e.g. `https://admin.kalitusi.com`):** build with `VITE_BASE=/` and configure the domain in GitHub Pages (add a `public/CNAME` file containing the domain so it persists across deploys). See [vite.config.ts](vite.config.ts) and [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml).
 
-The app calls `https://backend-bte7.onrender.com/api/v1` and signs staff in
+By default the app calls `https://api.kalitusi.com/api/v1` (see [src/api.ts](src/api.ts); override with `VITE_API_BASE_URL`) and signs staff in
 through Django token authentication. The backend must include
 `https://kalitusinature.github.io` in `CORS_ALLOWED_ORIGINS`. The browser
 session token is stored in `sessionStorage` and is cleared on sign-out.

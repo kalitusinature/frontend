@@ -22,7 +22,7 @@ import type {
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ??
-  'https://backend-bte7.onrender.com/api/v1'
+  'https://api.kalitusi.com/api/v1'
 ).replace(/\/+$/, '')
 
 export class ApiError extends Error {

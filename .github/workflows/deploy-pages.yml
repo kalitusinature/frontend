@@ -29,6 +29,10 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+        env:
+          # Use '/' when deploying to a custom domain (e.g. admin.kalitusi.com).
+          # Use '/frontend/' for the default GitHub project Pages URL.
+          VITE_BASE: /
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
