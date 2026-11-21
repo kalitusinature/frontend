@@ -4494,6 +4494,28 @@
   border-radius: 11px;
 }
 
+.login-secondary-action {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  color: #367750;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.login-secondary-action:hover {
+  text-decoration: underline;
+}
+
+.login-success {
+  color: #367750;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .login-footnote {
   gap: 7px;
   margin-top: 22px;

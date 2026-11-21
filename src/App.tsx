@@ -55,8 +55,13 @@ type IncomingCounts = {
 }
 
 function App() {
+  const passwordResetRequested =
+    new URLSearchParams(window.location.search).get('reset') === '1'
   const [token, setToken] = useState(
-    () => window.sessionStorage.getItem('kalitusi-admin-token') ?? '',
+    () =>
+      passwordResetRequested
+        ? ''
+        : window.sessionStorage.getItem('kalitusi-admin-token') ?? '',
   )
   const [username, setUsername] = useState(
     () => window.sessionStorage.getItem('kalitusi-admin-user') ?? '',
@@ -84,6 +89,12 @@ function App() {
       month: 'short',
     }).format(new Date()),
   )
+
+  useEffect(() => {
+    if (!passwordResetRequested) return
+    window.sessionStorage.removeItem('kalitusi-admin-token')
+    window.sessionStorage.removeItem('kalitusi-admin-user')
+  }, [passwordResetRequested])
 
   const navigateToPage = (page: PageId) => {
     activePageRef.current = page

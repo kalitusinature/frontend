@@ -114,6 +114,22 @@ export const api = {
       body: jsonBody({ username, password }),
     })
   },
+  requestStaffPasswordReset(email: string) {
+    return request<{ detail: string }>('/auth/password-reset/', undefined, {
+      method: 'POST',
+      body: jsonBody({ email }),
+    })
+  },
+  confirmStaffPasswordReset(uid: string, token: string, newPassword: string) {
+    return request<{ detail: string }>(
+      '/auth/password-reset/confirm/',
+      undefined,
+      {
+        method: 'POST',
+        body: jsonBody({ uid, token, new_password: newPassword }),
+      },
+    )
+  },
   logout(token: string) {
     return request<void>('/auth/logout/', token, { method: 'POST' })
   },
