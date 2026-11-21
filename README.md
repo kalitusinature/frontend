@@ -23,6 +23,12 @@ the app in Safari, tap **Share**, and choose **Add to Home Screen**. The app
 shell and static assets are available offline after the first visit, but staff
 sign-in and resort data still require a connection to the API.
 
+After 30 minutes in the signed-in portal, an install reminder appears if the
+app is not installed. Browser notifications require staff to select **Enable
+alerts** and grant permission. While the portal is open, it checks every 30
+seconds for new orders and pending reservations and sends browser notifications
+when their counts increase. Background push notifications are not configured.
+
 ## GitHub Pages deployment
 
 The `frontend` repository is configured to build and deploy from the `main`
@@ -33,9 +39,11 @@ branch with GitHub Actions. In repository **Settings → Pages**, choose
 - **Custom domain (e.g. `https://admin.kalitusi.com`):** build with `VITE_BASE=/` and configure the domain in GitHub Pages (add a `public/CNAME` file containing the domain so it persists across deploys). See [vite.config.ts](vite.config.ts) and [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml).
 
 By default the app calls `https://api.kalitusi.com/api/v1` (see [src/api.ts](src/api.ts); override with `VITE_API_BASE_URL`) and signs staff in
-through Django token authentication. The backend must include
-`https://kalitusinature.github.io` in `CORS_ALLOWED_ORIGINS`. The browser
-session token is stored in `sessionStorage` and is cleared on sign-out.
+through Django token authentication. The backend must include the deployed
+frontend origin (for example, `https://admin.kalitusi.com` or
+`https://kalitusinature.github.io`) in `CORS_ALLOWED_ORIGINS` and
+`CSRF_TRUSTED_ORIGINS`. The browser session token is stored in `sessionStorage`
+and is cleared on sign-out.
 
 ## Staff sections
 

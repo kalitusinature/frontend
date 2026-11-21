@@ -2164,8 +2164,88 @@
   background: transparent;
 }
 
+.browser-notifications-button {
+  white-space: nowrap;
+}
+
+.install-modal-backdrop {
+  z-index: 70;
+}
+
+.install-modal-card {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 34px 30px 28px;
+  text-align: center;
+}
+
+.install-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.install-modal-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  margin: 0 auto 17px;
+  border: 1px solid #dceadd;
+  border-radius: 17px;
+  color: #21643b;
+  background: #edf6ec;
+}
+
+.install-modal-card > .eyebrow {
+  color: #a17959;
+  font-size: 9px;
+}
+
+.install-modal-card h2 {
+  margin: 10px 0 0;
+  color: #2e4539;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.install-modal-card > p {
+  margin: 10px 0 0;
+  color: #78867e;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.install-modal-card > .install-modal-instructions {
+  margin-top: 15px;
+  padding: 11px 13px;
+  border: 1px solid #e4e9e1;
+  border-radius: 9px;
+  color: #53675b;
+  background: #f8faf6;
+}
+
+.install-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 23px;
+}
+
 .sidebar-scrim {
   display: none;
+}
+
+@media (max-width: 540px) {
+  .browser-notifications-button span {
+    display: none;
+  }
+
+  .install-modal-card {
+    padding: 31px 20px 22px;
+  }
 }
 
 .login-screen {
