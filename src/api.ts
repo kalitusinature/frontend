@@ -218,19 +218,20 @@ export const api = {
   lodges(token: string) {
     return request<Lodge[]>('/staff/lodges/', token)
   },
-  saveLodge(token: string, input: LodgeInput, id?: number, imageFile?: File) {
+  saveLodge(token: string, input: LodgeInput, id?: number, imageFiles: File[] = []) {
     const path = id ? `/staff/lodges/${id}/` : '/staff/lodges/'
     let body: BodyInit = jsonBody(input)
-    if (imageFile) {
+    if (imageFiles.length) {
       const form = new FormData()
       Object.entries(input).forEach(([key, value]) => {
+        if (value === undefined || value === null) return
         if (Array.isArray(value)) {
           value.forEach((item) => form.append(key, String(item)))
         } else {
           form.append(key, String(value))
         }
       })
-      form.append('image_file', imageFile)
+      imageFiles.forEach((file) => form.append('image_files', file))
       body = form
     }
     return request<Lodge>(path, token, {

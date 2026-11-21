@@ -40,6 +40,12 @@ export interface Product {
   updated_at: string
 }
 
+export interface LodgeImage {
+  id: number
+  image_url: string
+  sort_order: number
+}
+
 export interface Lodge {
   id: number
   name: string
@@ -52,6 +58,7 @@ export interface Lodge {
   max_advance_days: number
   checkin_weekdays: number[]
   image_url: string
+  images: LodgeImage[]
   is_active: boolean
 }
 
@@ -150,7 +157,9 @@ export interface DashboardData {
   recent_reservations: Reservation[]
 }
 
-export type LodgeInput = Omit<Lodge, 'id' | 'slug'>
+export type LodgeInput = Omit<Lodge, 'id' | 'slug' | 'images'> & {
+  remove_image_ids?: number[]
+}
 
 export interface LoginResponse {
   token: string
