@@ -15,6 +15,13 @@ export type ReservationStatus =
   | 'completed'
 
 export type ReservationSource = 'website' | 'walk_in' | 'phone' | 'staff'
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
+export type PaymentMethod =
+  | 'cash'
+  | 'card_at_counter'
+  | 'mobile_money'
+  | 'bank_transfer'
+  | 'other'
 
 export interface Category {
   id: number
@@ -82,7 +89,9 @@ export interface Order {
   phone: string
   email: string
   payment_method: 'cash' | 'card_at_counter'
-  payment_status: 'unpaid' | 'paid'
+  payment_status: PaymentStatus
+  amount_paid_ugx: number
+  balance_ugx: number
   note: string
   cancellation_reason: string
   total_ugx: number
@@ -103,6 +112,10 @@ export interface Reservation {
   check_out: string
   adults: number
   children: number
+  total_due_ugx: number
+  amount_paid_ugx: number
+  balance_ugx: number
+  payment_status: PaymentStatus
   note: string
   cancellation_reason: string
   occasion: string
@@ -123,9 +136,41 @@ export type ReservationInput = Pick<
   | 'check_out'
   | 'adults'
   | 'children'
+  | 'total_due_ugx'
   | 'note'
   | 'occasion'
 >
+
+export interface PaymentReceipt {
+  id: number
+  receipt_number: string
+  customer_name: string
+  customer_email: string
+  order_number: string | null
+  reservation_reference: string | null
+  method: PaymentMethod
+  method_label: string
+  transaction_reference: string
+  amount_ugx: number
+  total_due_ugx: number
+  paid_to_date_ugx: number
+  balance_ugx: number
+  payment_status: Exclude<PaymentStatus, 'unpaid'>
+  verified_at: string
+}
+
+export interface PaymentRecordInput {
+  order_id?: number
+  reservation_id?: number
+  amount_ugx: number
+  method: PaymentMethod
+  transaction_reference: string
+}
+
+export interface PaymentRecordResponse extends PaymentReceipt {
+  email_available: boolean
+  email_sent: boolean
+}
 
 export interface LodgeBlockout {
   id: number

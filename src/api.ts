@@ -8,6 +8,9 @@ import type {
   LoginResponse,
   Order,
   OrderStatus,
+  PaymentRecordInput,
+  PaymentRecordResponse,
+  PaymentReceipt,
   Paginated,
   Product,
   ProductInput,
@@ -212,14 +215,69 @@ export const api = {
     id: number,
     updates: {
       status?: OrderStatus
-      payment_status?: 'unpaid' | 'paid'
       cancellation_reason?: string
     },
   ) {
-    return request<Pick<Order, 'status' | 'payment_status'>>(`/staff/orders/${id}/`, token, {
+    return request<Pick<Order, 'status'>>(`/staff/orders/${id}/`, token, {
       method: 'PATCH',
       body: jsonBody(updates),
     })
+  },
+  recordPayment(token: string, input: PaymentRecordInput) {
+    return request<PaymentRecordResponse>('/staff/payments/', token, {
+      method: 'POST',
+      body: jsonBody(input),
+    })
+  },
+  paymentReceipts(
+    token: string,
+    filters: {
+      query?: string
+      status?: PaymentReceipt['payment_status'] | 'all'
+      startDate?: string
+      endDate?: string
+      page?: number
+    } = {},
+  ) {
+    const params = new URLSearchParams()
+    if (filters.query) params.set('q', filters.query)
+    if (filters.status && filters.status !== 'all') params.set('status', filters.status)
+    if (filters.startDate) params.set('start_date', filters.startDate)
+    if (filters.endDate) params.set('end_date', filters.endDate)
+    if (filters.page) params.set('page', String(filters.page))
+    const suffix = params.size ? `?${params.toString()}` : ''
+    return request<Paginated<PaymentReceipt>>(
+      `/staff/payment-receipts/${suffix}`,
+      token,
+    )
+  },
+  async downloadPaymentReceipt(token: string, paymentId: number) {
+    const headers = new Headers({ Accept: 'application/pdf' })
+    headers.set('Authorization', `Token ${token}`)
+    const response = await fetch(
+      `${API_BASE_URL}/staff/payment-receipts/${paymentId}/download/`,
+      { headers },
+    )
+    if (!response.ok) {
+      const text = await response.text()
+      let data: unknown = text
+      if (text) {
+        try {
+          data = JSON.parse(text) as unknown
+        } catch {
+          data = text
+        }
+      }
+      throw new ApiError(formatError(data), response.status)
+    }
+    return response.blob()
+  },
+  resendPaymentReceipt(token: string, paymentId: number) {
+    return request<{ detail: string }>(
+      `/staff/payment-receipts/${paymentId}/resend/`,
+      token,
+      { method: 'POST' },
+    )
   },
   products(token: string) {
     return request<Product[]>('/staff/products/', token)

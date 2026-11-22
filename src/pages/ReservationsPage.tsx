@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { ApiError, api } from '../api'
+import { RecordPaymentModal } from '../components/RecordPaymentModal'
 import type {
   DashboardData,
   Lodge,
@@ -34,7 +35,12 @@ import {
   PageLoadingScreen,
   StatusPill,
 } from '../components/ui'
-import { formatDate, formatDateTime, reservationStatusLabels } from '../utils'
+import {
+  formatDate,
+  formatDateTime,
+  formatUGX,
+  reservationStatusLabels,
+} from '../utils'
 
 const filters: { value: ReservationStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All requests' },
@@ -92,6 +98,7 @@ function blankReservation(lodgeId: number): ReservationInput {
     check_out: shiftDate(today, 1),
     adults: 1,
     children: 0,
+    total_due_ugx: 0,
     note: '',
     occasion: '',
   }
@@ -114,6 +121,7 @@ export function ReservationsPage({
   const [page, setPage] = useState(1)
   const [workingId, setWorkingId] = useState<number | null>(null)
   const [cancellationReservation, setCancellationReservation] = useState<Reservation | null>(null)
+  const [paymentReservation, setPaymentReservation] = useState<Reservation | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
   const [lodges, setLodges] = useState<Lodge[]>([])
@@ -274,6 +282,7 @@ export function ReservationsPage({
       check_out: reservation.check_out,
       adults: reservation.adults,
       children: reservation.children,
+      total_due_ugx: reservation.total_due_ugx,
       note: reservation.note,
       occasion: reservation.occasion,
     })
@@ -476,6 +485,11 @@ export function ReservationsPage({
           <a href={`tel:${reservation.phone}`}><Phone size={14} /> {reservation.phone}</a>
           {reservation.email && <a href={`mailto:${reservation.email}`}><Mail size={14} /> {reservation.email}</a>}
         </div>
+        <div className="reservation-payment-summary">
+          <span>Total due <strong>{formatUGX(reservation.total_due_ugx)}</strong></span>
+          <span>Paid <strong>{formatUGX(reservation.amount_paid_ugx)}</strong></span>
+          <span>Balance <strong>{formatUGX(reservation.balance_ugx)}</strong></span>
+        </div>
         {(reservation.occasion || reservation.note) && (
           <p className="reservation-note">
             {reservation.occasion && <strong>{reservation.occasion}: </strong>}
@@ -492,6 +506,16 @@ export function ReservationsPage({
           <span>Updated {formatDateTime(reservation.updated_at)}</span>
         </div>
         <div className="reservation-actions">
+          {reservation.balance_ugx > 0 &&
+            !['declined', 'cancelled'].includes(reservation.status) && (
+              <button
+                className="button button-outline"
+                disabled={workingId === reservation.id}
+                onClick={() => setPaymentReservation(reservation)}
+              >
+                Record payment
+              </button>
+            )}
           <button
             className="button button-outline"
             disabled={workingId === reservation.id}
@@ -865,6 +889,17 @@ export function ReservationsPage({
                 <input required type="number" min="0" max="50" value={draft.children} onChange={(event) => setDraft({ ...draft, children: Number(event.target.value) })} />
               </FormField>
             </div>
+            <FormField label="Total due (UGX)">
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={draft.total_due_ugx}
+                onChange={(event) =>
+                  setDraft({ ...draft, total_due_ugx: Number(event.target.value) })
+                }
+              />
+            </FormField>
             <div className="form-grid">
               <FormField label="Booking source">
                 <select value={draft.source} onChange={(event) => setDraft({ ...draft, source: event.target.value as ReservationSource })}>
@@ -981,6 +1016,20 @@ export function ReservationsPage({
             if (workingId !== cancellationReservation.id) setCancellationReservation(null)
           }}
           onConfirm={(reason) => void cancelReservation(reason)}
+        />
+      )}
+      {paymentReservation && (
+        <RecordPaymentModal
+          token={token}
+          reservationId={paymentReservation.id}
+          reference={paymentReservation.reference}
+          totalDue={paymentReservation.total_due_ugx}
+          amountPaid={paymentReservation.amount_paid_ugx}
+          balance={paymentReservation.balance_ugx}
+          customerEmail={paymentReservation.email}
+          notify={notify}
+          onClose={() => setPaymentReservation(null)}
+          onSaved={() => setRefreshKey((value) => value + 1)}
         />
       )}
     </>

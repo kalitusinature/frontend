@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   CalendarDays,
+  CreditCard,
   Gauge,
   LogOut,
   Menu,
@@ -18,6 +19,7 @@ import { LodgesPage } from './pages/LodgesPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { ReservationsPage } from './pages/ReservationsPage'
+import { PaymentReceiptsPage } from './pages/PaymentReceiptsPage'
 import { MyAccountPage } from './pages/MyAccountPage'
 import { LoginPage } from './pages/LoginPage'
 import type { LoginResponse } from './types'
@@ -31,6 +33,7 @@ export type PageId =
   | 'orders'
   | 'products'
   | 'reservations'
+  | 'payment-receipts'
   | 'categories'
   | 'lodges'
   | 'account'
@@ -40,6 +43,7 @@ const navigation = [
   { id: 'orders', label: 'Orders', icon: ReceiptText },
   { id: 'products', label: 'Menu products', icon: Salad },
   { id: 'reservations', label: 'Reservations', icon: CalendarDays },
+  { id: 'payment-receipts', label: 'Payment receipts', icon: CreditCard },
   { id: 'categories', label: 'Categories', icon: Shapes },
   { id: 'lodges', label: 'Lodges & cottages', icon: TreePalm },
 ] as const
@@ -399,6 +403,9 @@ function App() {
           {activePage === 'orders' && <OrdersPage {...pageProps} />}
           {activePage === 'products' && <ProductsPage {...pageProps} />}
           {activePage === 'reservations' && <ReservationsPage {...pageProps} />}
+          {activePage === 'payment-receipts' && (
+            <PaymentReceiptsPage {...pageProps} />
+          )}
           {activePage === 'categories' && <CategoriesPage {...pageProps} />}
           {activePage === 'lodges' && <LodgesPage {...pageProps} />}
           {activePage === 'account' && (

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Ban, Check, Search, UtensilsCrossed } from 'lucide-react'
 import { ApiError, api } from '../api'
 import type { Order, OrderStatus } from '../types'
+import { RecordPaymentModal } from '../components/RecordPaymentModal'
 import {
   EmptyState,
   ErrorState,
@@ -51,6 +52,7 @@ export function OrdersPage({
   const [workingId, setWorkingId] = useState<number | null>(null)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [cancellationOrder, setCancellationOrder] = useState<Order | null>(null)
+  const [paymentOrder, setPaymentOrder] = useState<Order | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
   const [result, setResult] = useState<{
@@ -97,7 +99,6 @@ export function OrdersPage({
     order: Order,
     updates: {
       status?: OrderStatus
-      payment_status?: 'unpaid' | 'paid'
       cancellation_reason?: string
     },
   ): Promise<boolean> => {
@@ -107,10 +108,8 @@ export function OrdersPage({
       await api.updateOrder(token, order.id, updates)
       setRefreshKey((value) => value + 1)
       notify(
-        updates.payment_status
-          ? 'Payment status updated.'
-          : updates.status === 'cancelled'
-            ? `${order.number} cancelled.`
+        updates.status === 'cancelled'
+          ? `${order.number} cancelled.`
           : `${order.number} updated successfully.`,
       )
       return true
@@ -265,20 +264,24 @@ export function OrdersPage({
                         </span>
                         {order.payment_status === 'paid' ? (
                           <span className="payment-link payment-paid">Paid</span>
+                        ) : order.payment_status === 'partial' ? (
+                          <span className="payment-link payment-partial">
+                            Partial · {formatUGX(order.balance_ugx)} due
+                          </span>
                         ) : order.status === 'cancelled' ? (
                           <span className="payment-link">Unpaid</span>
                         ) : (
                           <button
                             className="payment-link"
                             type="button"
-                            disabled={workingId === order.id}
-                            aria-label={`Mark ${order.number} paid`}
+                            disabled={workingId === order.id || order.balance_ugx <= 0}
+                            aria-label={`Record payment for ${order.number}`}
                             onClick={(event) => {
                               event.stopPropagation()
-                              void updateOrder(order, { payment_status: 'paid' })
+                              setPaymentOrder(order)
                             }}
                           >
-                            Unpaid · mark paid
+                            Record payment
                           </button>
                         )}
                       </div>
@@ -360,19 +363,23 @@ export function OrdersPage({
                     <strong>{order.payment_method === 'cash' ? 'Cash at resort' : 'Card at counter'}</strong>
                     {order.payment_status === 'paid' ? (
                       <small className="payment-paid">Paid</small>
+                    ) : order.payment_status === 'partial' ? (
+                      <small className="payment-partial">
+                        Partial · {formatUGX(order.balance_ugx)} due
+                      </small>
                     ) : order.status === 'cancelled' ? (
                       <small>Unpaid</small>
                     ) : (
                       <button
                         className="payment-link"
                         type="button"
-                        disabled={workingId === order.id}
+                        disabled={workingId === order.id || order.balance_ugx <= 0}
                         onClick={(event) => {
                           event.stopPropagation()
-                          void updateOrder(order, { payment_status: 'paid' })
+                          setPaymentOrder(order)
                         }}
                       >
-                        Unpaid · mark paid
+                        Record payment
                       </button>
                     )}
                   </div>
@@ -479,7 +486,21 @@ export function OrdersPage({
             </div>
             <div className="order-detail-field">
               <span>Payment status</span>
-              <strong>{selectedOrder.payment_status === 'paid' ? 'Paid' : 'Unpaid'}</strong>
+              <strong>
+                {selectedOrder.payment_status === 'paid'
+                  ? 'Paid in full'
+                  : selectedOrder.payment_status === 'partial'
+                    ? 'Partially paid'
+                    : 'Unpaid'}
+              </strong>
+            </div>
+            <div className="order-detail-field">
+              <span>Paid to date</span>
+              <strong>{formatUGX(selectedOrder.amount_paid_ugx)}</strong>
+            </div>
+            <div className="order-detail-field">
+              <span>Outstanding balance</span>
+              <strong>{formatUGX(selectedOrder.balance_ugx)}</strong>
             </div>
           </div>
           <div className="order-detail-lines">
@@ -532,17 +553,15 @@ export function OrdersPage({
                   : nextOrderStatus[selectedOrder.status]!.label}
               </button>
             )}
-            {selectedOrder.payment_status === 'unpaid' &&
+            {selectedOrder.balance_ugx > 0 &&
               selectedOrder.status !== 'cancelled' && (
               <button
                 type="button"
                 className="button button-outline"
                 disabled={workingId === selectedOrder.id}
-                onClick={() =>
-                  void updateOrder(selectedOrder, { payment_status: 'paid' })
-                }
+                onClick={() => setPaymentOrder(selectedOrder)}
               >
-                Mark paid
+                Record payment
               </button>
             )}
             {!['completed', 'cancelled'].includes(selectedOrder.status) && (
@@ -572,6 +591,20 @@ export function OrdersPage({
             if (workingId !== cancellationOrder.id) setCancellationOrder(null)
           }}
           onConfirm={(reason) => void cancelOrder(reason)}
+        />
+      )}
+      {paymentOrder && (
+        <RecordPaymentModal
+          token={token}
+          orderId={paymentOrder.id}
+          reference={paymentOrder.number}
+          totalDue={paymentOrder.total_ugx}
+          amountPaid={paymentOrder.amount_paid_ugx}
+          balance={paymentOrder.balance_ugx}
+          customerEmail={paymentOrder.email}
+          notify={notify}
+          onClose={() => setPaymentOrder(null)}
+          onSaved={() => setRefreshKey((value) => value + 1)}
         />
       )}
     </div>
