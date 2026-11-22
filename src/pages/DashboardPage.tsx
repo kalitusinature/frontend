@@ -20,7 +20,11 @@ import {
   StatusPill,
 } from '../components/ui'
 import type { PageId } from '../App'
-import { formatDateTime, formatUGX } from '../utils'
+import {
+  formatDateTime,
+  formatUGX,
+  reservationStatusLabels,
+} from '../utils'
 
 const orderFlowStatuses: { status: OrderStatus; label: string }[] = [
   { status: 'new', label: 'New' },
@@ -278,7 +282,10 @@ export function DashboardPage({
                         <strong>{reservation.guest_name}</strong>
                         <small>{reservation.lodge_name} · {reservation.check_in}</small>
                       </span>
-                      <StatusPill status={reservation.status} />
+                      <StatusPill
+                        status={reservation.status}
+                        label={reservationStatusLabels[reservation.status]}
+                      />
                     </button>
                   ))}
                 </div>

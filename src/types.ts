@@ -11,6 +11,7 @@ export type ReservationStatus =
   | 'confirmed'
   | 'declined'
   | 'cancelled'
+  | 'checked_in'
   | 'completed'
 
 export type ReservationSource = 'website' | 'walk_in' | 'phone' | 'staff'

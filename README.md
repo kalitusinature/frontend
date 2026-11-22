@@ -53,7 +53,8 @@ and is cleared on sign-out.
 - Dashboard with order and reservation totals and recent activity.
 - Orders: search, filter, confirm, progress, and record payment at the resort.
 - Menu products: create and edit products, pricing, categories, uploaded images, and visibility.
-- Reservations: review, confirm, or decline lodge and cottage requests.
+- Reservations: review, confirm, reject, check in, check out, or cancel lodge and cottage stays.
+  The lifecycle is Pending Review → Confirmed → Checked In → Checked Out; rejected and cancelled requests are terminal.
 - Categories and lodges/cottages: create and edit public menu and stay inventory.
 
 Only active Django staff users can obtain an API token. No credential or token

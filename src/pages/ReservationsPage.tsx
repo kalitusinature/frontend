@@ -34,15 +34,16 @@ import {
   PageLoadingScreen,
   StatusPill,
 } from '../components/ui'
-import { formatDate, formatDateTime } from '../utils'
+import { formatDate, formatDateTime, reservationStatusLabels } from '../utils'
 
 const filters: { value: ReservationStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All requests' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'declined', label: 'Declined' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'completed', label: 'Completed' },
+  { value: 'pending', label: reservationStatusLabels.pending },
+  { value: 'confirmed', label: reservationStatusLabels.confirmed },
+  { value: 'declined', label: reservationStatusLabels.declined },
+  { value: 'cancelled', label: reservationStatusLabels.cancelled },
+  { value: 'checked_in', label: reservationStatusLabels.checked_in },
+  { value: 'completed', label: reservationStatusLabels.completed },
 ]
 
 const sourceOptions: { value: ReservationSource; label: string }[] = [
@@ -321,7 +322,7 @@ export function ReservationsPage({
   ): Promise<boolean> => {
     if (
       next === 'declined' &&
-      !window.confirm(`Decline reservation ${reservation.reference}?`)
+      !window.confirm(`Reject reservation ${reservation.reference}?`)
     ) {
       return false
     }
@@ -336,7 +337,7 @@ export function ReservationsPage({
       notify(
         next === 'cancelled'
           ? `Reservation ${reservation.reference} cancelled.`
-          : `Reservation ${reservation.reference} marked ${next}.`,
+          : `Reservation ${reservation.reference} marked ${reservationStatusLabels[next]}.`,
       )
       return true
     } catch (requestError) {
@@ -451,7 +452,10 @@ export function ReservationsPage({
             <h2>{reservation.guest_name}</h2>
             <span className="reservation-lodge">{reservation.lodge_name}</span>
           </div>
-          <StatusPill status={reservation.status} />
+          <StatusPill
+            status={reservation.status}
+            label={reservationStatusLabels[reservation.status]}
+          />
         </div>
         <div className="reservation-details">
           <div className="reservation-date-block">
@@ -502,7 +506,7 @@ export function ReservationsPage({
                 disabled={workingId === reservation.id}
                 onClick={() => void updateStatus(reservation, 'declined')}
               >
-                <X size={15} /> Decline
+                <X size={15} /> Reject
               </button>
               <button
                 className="button button-primary button-small"
@@ -528,11 +532,20 @@ export function ReservationsPage({
               <button
                 className="button button-primary button-small"
                 disabled={workingId === reservation.id}
-                onClick={() => void updateStatus(reservation, 'completed')}
+                onClick={() => void updateStatus(reservation, 'checked_in')}
               >
-                <Check size={15} /> Complete stay
+                <Check size={15} /> Check in
               </button>
             </>
+          )}
+          {reservation.status === 'checked_in' && (
+            <button
+              className="button button-primary button-small"
+              disabled={workingId === reservation.id}
+              onClick={() => void updateStatus(reservation, 'completed')}
+            >
+              <Check size={15} /> Check out
+            </button>
           )}
           {['declined', 'cancelled', 'completed'].includes(reservation.status) && (
             <button
@@ -573,10 +586,11 @@ export function ReservationsPage({
         <div className="reservation-metrics">
           {[
             ['Total', dashboard.reservations_total],
-            ['Pending', dashboard.reservations_by_status.pending ?? 0],
+            ['Pending Review', dashboard.reservations_by_status.pending ?? 0],
             ['Confirmed', dashboard.reservations_by_status.confirmed ?? 0],
+            ['Checked In', dashboard.reservations_by_status.checked_in ?? 0],
             ['Cancelled', dashboard.reservations_by_status.cancelled ?? 0],
-            ['Completed', dashboard.reservations_by_status.completed ?? 0],
+            ['Checked Out', dashboard.reservations_by_status.completed ?? 0],
           ].map(([label, amount]) => (
             <div className="metric-card" key={label}>
               <span>{label}</span><strong>{amount}</strong>
@@ -627,11 +641,12 @@ export function ReservationsPage({
         </div>
         <div className="calendar-legend" aria-label="Reservation status legend">
           {[
-            ['pending', 'Pending'],
-            ['confirmed', 'Confirmed'],
-            ['declined', 'Declined'],
-            ['cancelled', 'Cancelled'],
-            ['completed', 'Completed'],
+            ['pending', reservationStatusLabels.pending],
+            ['confirmed', reservationStatusLabels.confirmed],
+            ['declined', reservationStatusLabels.declined],
+            ['cancelled', reservationStatusLabels.cancelled],
+            ['checked_in', reservationStatusLabels.checked_in],
+            ['completed', reservationStatusLabels.completed],
           ].map(([status, label]) => (
             <span key={status}>
               <i className={`calendar-legend-dot is-${status}`} aria-hidden="true" />
@@ -786,7 +801,11 @@ export function ReservationsPage({
       ) : (
         <div className="panel">
           <EmptyState
-            title={status === 'all' ? 'No reservations yet' : `No ${status} reservations`}
+            title={
+              status === 'all'
+                ? 'No reservations yet'
+                : `No ${reservationStatusLabels[status]} reservations`
+            }
             description="New lodge and cottage requests will appear here."
           />
         </div>
@@ -890,7 +909,10 @@ export function ReservationsPage({
                       <strong>{reservation.guest_name}</strong>
                       <small>{reservation.reference}</small>
                     </div>
-                    <StatusPill status={reservation.status} />
+                    <StatusPill
+                      status={reservation.status}
+                      label={reservationStatusLabels[reservation.status]}
+                    />
                   </div>
                   <p className="calendar-day-booking-lodge">{reservation.lodge_name}</p>
                   <div className="calendar-day-booking-facts">

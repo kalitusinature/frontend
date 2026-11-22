@@ -1,3 +1,14 @@
+import type { ReservationStatus } from './types'
+
+export const reservationStatusLabels: Record<ReservationStatus, string> = {
+  pending: 'Pending Review',
+  confirmed: 'Confirmed',
+  declined: 'Rejected',
+  cancelled: 'Cancelled',
+  checked_in: 'Checked In',
+  completed: 'Checked Out',
+}
+
 export function formatUGX(value: number): string {
   return new Intl.NumberFormat('en-UG', {
     style: 'currency',

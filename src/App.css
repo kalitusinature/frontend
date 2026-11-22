@@ -742,6 +742,11 @@
   background: #edf5f9;
 }
 
+.status-checked-in {
+  color: #337d64;
+  background: #e8f5ed;
+}
+
 .status-preparing {
   color: #656e9a;
   background: #f0f0fb;
@@ -3378,7 +3383,7 @@
 
 .reservation-metrics {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
 }
@@ -3634,6 +3639,12 @@
   background: #fbf3de;
 }
 
+.calendar-reservation.is-checked_in {
+  border-color: #86a98b;
+  color: #35654d;
+  background: #edf5ee;
+}
+
 .calendar-reservation.is-declined,
 .calendar-reservation.is-cancelled {
   border-color: #c98d83;
@@ -3698,6 +3709,10 @@
 
 .calendar-day-booking.is-pending {
   border-left-color: #d3a444;
+}
+
+.calendar-day-booking.is-checked_in {
+  border-left-color: #86a98b;
 }
 
 .calendar-day-booking.is-declined,
@@ -3813,6 +3828,10 @@
   background: #d3a444;
 }
 
+.calendar-legend-dot.is-checked_in {
+  background: #86a98b;
+}
+
 .calendar-legend-dot.is-declined,
 .calendar-legend-dot.is-cancelled {
   background: #c98d83;
@@ -3851,7 +3870,7 @@
 
 @media (max-width: 700px) {
   .reservation-metrics {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 6px;
     margin-bottom: 14px;
   }
@@ -4756,6 +4775,7 @@
 
 .status-accepted,
 .status-confirmed,
+.status-checked-in,
 .status-ready,
 .status-completed {
   color: #166534;
