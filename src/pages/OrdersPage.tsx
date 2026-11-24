@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Ban, Check, Search, UtensilsCrossed } from 'lucide-react'
+import { Ban, Check, Search, Trash2, UtensilsCrossed } from 'lucide-react'
 import { ApiError, api } from '../api'
 import type { Order, OrderStatus } from '../types'
 import { RecordPaymentModal } from '../components/RecordPaymentModal'
@@ -49,10 +49,17 @@ export function OrdersPage({
   const [status, setStatus] = useState<OrderStatus | 'all'>('all')
   const [searchInput, setSearchInput] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [date, setDate] = useState('')
+  const [month, setMonth] = useState('')
   const [workingId, setWorkingId] = useState<number | null>(null)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [cancellationOrder, setCancellationOrder] = useState<Order | null>(null)
   const [paymentOrder, setPaymentOrder] = useState<Order | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    ids: number[]
+    description: string
+  } | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
   const [result, setResult] = useState<{
@@ -60,11 +67,13 @@ export function OrdersPage({
     orders?: Order[]
     error?: string
   } | null>(null)
-  const requestKey = `${token}:${status}:${searchTerm}`
+  const requestKey = `${token}:${status}:${searchTerm}:${date}:${month}`
   const orders = result?.key === requestKey ? result.orders ?? [] : []
   const selectedOrder = result?.orders?.find((order) => order.id === selectedOrderId)
   const loading = result?.key !== requestKey
-  const error = actionError || (result?.key === requestKey ? result.error ?? '' : '')
+  const error =
+    (deleteConfirmation ? '' : actionError) ||
+    (result?.key === requestKey ? result.error ?? '' : '')
 
   useEffect(() => {
     let active = true
@@ -72,7 +81,7 @@ export function OrdersPage({
       setRefreshKey((value) => value + 1)
     }, 30_000)
 
-    api.orders(token, status, searchTerm)
+    api.orders(token, { status, query: searchTerm, date, month })
       .then((result) => {
         if (active) setResult({ key: requestKey, orders: result })
       })
@@ -88,7 +97,7 @@ export function OrdersPage({
       active = false
       window.clearInterval(refreshTimer)
     }
-  }, [token, status, searchTerm, refreshKey, requestKey])
+  }, [token, status, searchTerm, date, month, refreshKey, requestKey])
 
   const search = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -137,6 +146,38 @@ export function OrdersPage({
     }
   }
 
+  const removeOrders = async () => {
+    if (!deleteConfirmation) return
+    setDeleting(true)
+    setActionError('')
+    try {
+      const { deleted_count: deletedCount } = await api.deleteOrders(
+        token,
+        deleteConfirmation.ids,
+      )
+      if (
+        selectedOrderId !== null &&
+        deleteConfirmation.ids.includes(selectedOrderId)
+      ) {
+        setSelectedOrderId(null)
+      }
+      setDeleteConfirmation(null)
+      setRefreshKey((value) => value + 1)
+      notify(`${deletedCount} order${deletedCount === 1 ? '' : 's'} deleted.`)
+    } catch (requestError) {
+      setActionError(
+        requestError instanceof ApiError
+          ? requestError.message
+          : 'Could not delete the selected orders.',
+      )
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const hasActiveFilters =
+    status !== 'all' || Boolean(searchTerm || date || month)
+
   return (
     <div className="orders-page">
       <div className="status-tabs" role="group" aria-label="Filter orders by status">
@@ -158,12 +199,57 @@ export function OrdersPage({
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Search order or guest"
-            aria-label="Search order or guest"
+            placeholder="Search order or customer"
+            aria-label="Search order or customer"
           />
           <button type="submit">Search</button>
         </form>
+        <label className="order-date-filter">
+          <span>Date</span>
+          <input
+            type="date"
+            value={date}
+            aria-label="Filter orders by date"
+            onChange={(event) => {
+              setDate(event.target.value)
+              if (event.target.value) setMonth('')
+            }}
+          />
+        </label>
+        <label className="order-date-filter">
+          <span>Month</span>
+          <input
+            type="month"
+            value={month}
+            aria-label="Filter orders by month"
+            onChange={(event) => {
+              setMonth(event.target.value)
+              if (event.target.value) setDate('')
+            }}
+          />
+        </label>
         <span className="toolbar-count">{orders.length} orders</span>
+        {orders.length > 0 && (
+          <button
+            type="button"
+            className="button button-outline button-danger button-small order-bulk-delete"
+            disabled={loading || deleting}
+            onClick={() => {
+              setActionError('')
+              setDeleteConfirmation({
+                ids: orders.map((order) => order.id),
+                description: hasActiveFilters
+                  ? `Delete all ${orders.length} orders matching the current filters?`
+                  : `Delete all ${orders.length} orders?`,
+              })
+            }}
+          >
+            <Trash2 size={14} />
+            {hasActiveFilters
+              ? `Delete matching (${orders.length})`
+              : `Delete all (${orders.length})`}
+          </button>
+        )}
       </div>
 
       {error && <ErrorState message={error} retry={() => setRefreshKey((value) => value + 1)} />}
@@ -578,6 +664,22 @@ export function OrdersPage({
                 Cancel order
               </button>
             )}
+            <button
+              type="button"
+              className="button button-danger button-outline"
+              disabled={deleting || workingId === selectedOrder.id}
+              onClick={() => {
+                setSelectedOrderId(null)
+                setActionError('')
+                setDeleteConfirmation({
+                  ids: [selectedOrder.id],
+                  description: `Permanently delete order ${selectedOrder.number}?`,
+                })
+              }}
+            >
+              <Trash2 size={15} />
+              Delete order
+            </button>
           </div>
         </Modal>
       )}
@@ -606,6 +708,49 @@ export function OrdersPage({
           onClose={() => setPaymentOrder(null)}
           onSaved={() => setRefreshKey((value) => value + 1)}
         />
+      )}
+      {deleteConfirmation && (
+        <Modal
+          title="Delete orders?"
+          subtitle="This action cannot be undone."
+          onClose={() => {
+            if (!deleting) {
+              setDeleteConfirmation(null)
+              setActionError('')
+            }
+          }}
+        >
+          <div className="order-delete-confirmation">
+            <p>{deleteConfirmation.description}</p>
+            <p>
+              Orders with recorded payments cannot be deleted, to protect their
+              financial records.
+            </p>
+            {actionError && <ErrorState message={actionError} />}
+            <div className="order-detail-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                disabled={deleting}
+                onClick={() => {
+                  setDeleteConfirmation(null)
+                  setActionError('')
+                }}
+              >
+                Keep orders
+              </button>
+              <button
+                type="button"
+                className="button button-danger button-outline"
+                disabled={deleting}
+                onClick={() => void removeOrders()}
+              >
+                <Trash2 size={15} />
+                {deleting ? 'Deleting…' : 'Confirm delete'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

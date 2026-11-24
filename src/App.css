@@ -5347,6 +5347,41 @@
   background: #fff;
 }
 
+.order-date-filter {
+  display: flex;
+  min-height: 43px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid #e2e9e3;
+  border-radius: 10px;
+  color: #78877d;
+  background: #fff;
+  font-size: 10px;
+}
+
+.order-date-filter input {
+  min-width: 0;
+  border: 0;
+  color: #46564e;
+  background: transparent;
+  font: inherit;
+}
+
+.order-bulk-delete {
+  white-space: nowrap;
+}
+
+.order-delete-confirmation > p {
+  color: #627168;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.order-delete-confirmation .error-state {
+  margin: 12px 0;
+}
+
 .orders-page .orders-desktop-table {
   border-radius: 14px;
   box-shadow: 0 6px 22px rgba(22, 52, 37, 0.045);
@@ -5382,6 +5417,18 @@
     margin-left: 0;
     justify-self: end;
     white-space: nowrap;
+  }
+
+  .orders-page .order-date-filter {
+    min-width: 0;
+  }
+
+  .orders-page .order-date-filter input {
+    width: 100%;
+  }
+
+  .orders-page .order-bulk-delete {
+    grid-column: 1 / -1;
   }
 
   .orders-mobile-card {

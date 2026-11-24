@@ -203,12 +203,30 @@ export const api = {
   dashboard(token: string) {
     return request<DashboardData>('/staff/dashboard/', token)
   },
-  orders(token: string, status?: string, query?: string) {
+  orders(
+    token: string,
+    filters: {
+      status?: string
+      query?: string
+      date?: string
+      month?: string
+    } = {},
+  ) {
     const params = new URLSearchParams()
-    if (status && status !== 'all') params.set('status', status)
-    if (query) params.set('q', query)
+    if (filters.status && filters.status !== 'all') {
+      params.set('status', filters.status)
+    }
+    if (filters.query) params.set('q', filters.query)
+    if (filters.date) params.set('date', filters.date)
+    if (filters.month) params.set('month', filters.month)
     const suffix = params.size ? `?${params.toString()}` : ''
     return request<Order[]>(`/staff/orders/${suffix}`, token)
+  },
+  deleteOrders(token: string, ids: number[]) {
+    return request<{ deleted_count: number }>('/staff/orders/', token, {
+      method: 'DELETE',
+      body: jsonBody({ ids }),
+    })
   },
   updateOrder(
     token: string,
