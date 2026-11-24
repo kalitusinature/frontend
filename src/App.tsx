@@ -5,6 +5,7 @@ import {
   Gauge,
   LogOut,
   Menu,
+  MessageCircle,
   ReceiptText,
   Salad,
   Shapes,
@@ -17,6 +18,7 @@ import { CategoriesPage } from './pages/CategoriesPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LodgesPage } from './pages/LodgesPage'
 import { OrdersPage } from './pages/OrdersPage'
+import { ChatPage } from './pages/ChatPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { ReservationsPage } from './pages/ReservationsPage'
 import { PaymentReceiptsPage } from './pages/PaymentReceiptsPage'
@@ -31,6 +33,7 @@ import './App.css'
 export type PageId =
   | 'dashboard'
   | 'orders'
+  | 'chats'
   | 'products'
   | 'reservations'
   | 'payment-receipts'
@@ -41,6 +44,7 @@ export type PageId =
 const navigation = [
   { id: 'dashboard', label: 'Dashboard', icon: Gauge },
   { id: 'orders', label: 'Orders', icon: ReceiptText },
+  { id: 'chats', label: 'Customer chat', icon: MessageCircle },
   { id: 'products', label: 'Menu products', icon: Salad },
   { id: 'reservations', label: 'Reservations', icon: CalendarDays },
   { id: 'payment-receipts', label: 'Payment receipts', icon: CreditCard },
@@ -56,6 +60,7 @@ function titleForPage(page: PageId): string {
 type IncomingCounts = {
   orders: number
   reservations: number
+  chats: number
 }
 
 function App() {
@@ -81,6 +86,7 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [unreadOrders, setUnreadOrders] = useState(0)
   const [unreadReservations, setUnreadReservations] = useState(0)
+  const [unreadChats, setUnreadChats] = useState(0)
   const [notificationPermission, setNotificationPermission] = useState<
     NotificationPermission | 'unsupported'
   >(() => ('Notification' in window ? Notification.permission : 'unsupported'))
@@ -104,6 +110,7 @@ function App() {
     activePageRef.current = page
     if (page === 'orders') setUnreadOrders(0)
     if (page === 'reservations') setUnreadReservations(0)
+    if (page === 'chats') setUnreadChats(0)
     setActivePage(page)
   }
 
@@ -117,11 +124,16 @@ function App() {
     const handleNotificationClick = (event: MessageEvent<unknown>) => {
       const message = event.data as { type?: string; page?: string } | null
       if (message?.type !== 'push-notification-click') return
-      if (message.page !== 'orders' && message.page !== 'reservations') return
+      if (
+        message.page !== 'orders' &&
+        message.page !== 'reservations' &&
+        message.page !== 'chats'
+      ) return
       activePageRef.current = message.page
       setActivePage(message.page)
       if (message.page === 'orders') setUnreadOrders(0)
       if (message.page === 'reservations') setUnreadReservations(0)
+      if (message.page === 'chats') setUnreadChats(0)
     }
 
     navigator.serviceWorker.addEventListener('message', handleNotificationClick)
@@ -152,14 +164,19 @@ function App() {
             setActivePage('account')
             setUnreadOrders(0)
             setUnreadReservations(0)
+            setUnreadChats(0)
             return
           }
         }
-        const data = await api.dashboard(token)
+        const [data, chats] = await Promise.all([
+          api.dashboard(token),
+          api.unreadChats(token),
+        ])
         if (!active) return
         const counts = {
           orders: data.new_orders,
           reservations: data.pending_reservations,
+          chats: chats.count,
         }
         const previous = previousIncomingCounts.current
         if (previous === null) {
@@ -167,16 +184,26 @@ function App() {
           setUnreadReservations(
             activePageRef.current === 'reservations' ? 0 : counts.reservations,
           )
+          setUnreadChats(activePageRef.current === 'chats' ? 0 : counts.chats)
         } else {
           const newOrders = Math.max(0, counts.orders - previous.orders)
           const newReservations = Math.max(
             0,
             counts.reservations - previous.reservations,
           )
+          const newChats = Math.max(0, counts.chats - previous.chats)
           setUnreadOrders((unread) => Math.min(unread, counts.orders) + newOrders)
           setUnreadReservations(
             (unread) => Math.min(unread, counts.reservations) + newReservations,
           )
+          setUnreadChats((unread) => Math.min(unread, counts.chats) + newChats)
+          if (newChats > 0 && activePageRef.current !== 'chats') {
+            setNotice(
+              newChats === 1
+                ? 'New customer chat message.'
+                : `${newChats} new customer chat messages.`,
+            )
+          }
         }
         previousIncomingCounts.current = counts
         setAuthError('')
@@ -189,6 +216,7 @@ function App() {
           setUsername('')
           setUnreadOrders(0)
           setUnreadReservations(0)
+          setUnreadChats(0)
           activePageRef.current = 'dashboard'
           setActivePage('dashboard')
         } else {
@@ -221,6 +249,7 @@ function App() {
     setAuthError('')
     setUnreadOrders(0)
     setUnreadReservations(0)
+    setUnreadChats(0)
     const page = result.must_change_password ? 'account' : 'dashboard'
     activePageRef.current = page
     setActivePage(page)
@@ -247,6 +276,7 @@ function App() {
       setUsername('')
       setUnreadOrders(0)
       setUnreadReservations(0)
+      setUnreadChats(0)
       previousIncomingCounts.current = null
       activePageRef.current = 'dashboard'
       setActivePage('dashboard')
@@ -317,6 +347,11 @@ function App() {
                   aria-label={`${unreadReservations} unread reservations`}
                 >
                   {unreadReservations > 99 ? '99+' : unreadReservations}
+                </span>
+              )}
+              {id === 'chats' && unreadChats > 0 && (
+                <span className="nav-count-badge" aria-label={`${unreadChats} unread chats`}>
+                  {unreadChats > 99 ? '99+' : unreadChats}
                 </span>
               )}
             </button>
@@ -401,6 +436,7 @@ function App() {
             />
           )}
           {activePage === 'orders' && <OrdersPage {...pageProps} />}
+          {activePage === 'chats' && <ChatPage {...pageProps} />}
           {activePage === 'products' && <ProductsPage {...pageProps} />}
           {activePage === 'reservations' && <ReservationsPage {...pageProps} />}
           {activePage === 'payment-receipts' && (

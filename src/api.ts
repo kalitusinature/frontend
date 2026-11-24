@@ -1,6 +1,8 @@
 import type {
   Category,
   CategoryInput,
+  ChatConversation,
+  ChatMessage,
   DashboardData,
   LodgeBlockout,
   Lodge,
@@ -202,6 +204,24 @@ export const api = {
   },
   dashboard(token: string) {
     return request<DashboardData>('/staff/dashboard/', token)
+  },
+  unreadChats(token: string) {
+    return request<{ count: number }>('/staff/chats/unread/', token)
+  },
+  chatConversations(token: string) {
+    return request<ChatConversation[]>('/staff/chats/', token)
+  },
+  chatMessages(token: string, conversationId: number) {
+    return request<{ conversation: Pick<ChatConversation, 'id' | 'guest_name' | 'email'>; messages: ChatMessage[] }>(
+      `/staff/chats/${conversationId}/messages/`,
+      token,
+    )
+  },
+  sendChatMessage(token: string, conversationId: number, body: string) {
+    return request<ChatMessage>(`/staff/chats/${conversationId}/messages/send/`, token, {
+      method: 'POST',
+      body: jsonBody({ body }),
+    })
   },
   orders(
     token: string,

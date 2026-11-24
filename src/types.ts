@@ -99,6 +99,24 @@ export interface Order {
   items: OrderItem[]
 }
 
+export interface ChatConversation {
+  id: number
+  guest_name: string
+  email: string
+  updated_at: string
+  unread_count: number
+  last_message_body: string
+  last_message_sender: 'customer' | 'staff' | ''
+  last_message_at: string | null
+}
+
+export interface ChatMessage {
+  id: number
+  sender: 'customer' | 'staff'
+  body: string
+  created_at: string
+}
+
 export interface Reservation {
   id: number
   reference: string
