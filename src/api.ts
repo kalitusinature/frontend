@@ -222,8 +222,8 @@ export const api = {
     const suffix = params.size ? `?${params.toString()}` : ''
     return request<Order[]>(`/staff/orders/${suffix}`, token)
   },
-  deleteOrders(token: string, ids: number[]) {
-    return request<{ deleted_count: number }>('/staff/orders/', token, {
+  archiveOrders(token: string, ids: number[]) {
+    return request<{ archived_count: number }>('/staff/orders/', token, {
       method: 'DELETE',
       body: jsonBody({ ids }),
     })

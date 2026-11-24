@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Ban, Check, Search, Trash2, UtensilsCrossed } from 'lucide-react'
+import { Archive, Ban, Check, Search, UtensilsCrossed } from 'lucide-react'
 import { ApiError, api } from '../api'
 import type { Order, OrderStatus } from '../types'
 import { RecordPaymentModal } from '../components/RecordPaymentModal'
@@ -55,11 +55,11 @@ export function OrdersPage({
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [cancellationOrder, setCancellationOrder] = useState<Order | null>(null)
   const [paymentOrder, setPaymentOrder] = useState<Order | null>(null)
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+  const [archiveConfirmation, setArchiveConfirmation] = useState<{
     ids: number[]
     description: string
   } | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [archiving, setArchiving] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
   const [result, setResult] = useState<{
@@ -72,7 +72,7 @@ export function OrdersPage({
   const selectedOrder = result?.orders?.find((order) => order.id === selectedOrderId)
   const loading = result?.key !== requestKey
   const error =
-    (deleteConfirmation ? '' : actionError) ||
+    (archiveConfirmation ? '' : actionError) ||
     (result?.key === requestKey ? result.error ?? '' : '')
 
   useEffect(() => {
@@ -146,32 +146,32 @@ export function OrdersPage({
     }
   }
 
-  const removeOrders = async () => {
-    if (!deleteConfirmation) return
-    setDeleting(true)
+  const archiveOrders = async () => {
+    if (!archiveConfirmation) return
+    setArchiving(true)
     setActionError('')
     try {
-      const { deleted_count: deletedCount } = await api.deleteOrders(
+      const { archived_count: archivedCount } = await api.archiveOrders(
         token,
-        deleteConfirmation.ids,
+        archiveConfirmation.ids,
       )
       if (
         selectedOrderId !== null &&
-        deleteConfirmation.ids.includes(selectedOrderId)
+        archiveConfirmation.ids.includes(selectedOrderId)
       ) {
         setSelectedOrderId(null)
       }
-      setDeleteConfirmation(null)
+      setArchiveConfirmation(null)
       setRefreshKey((value) => value + 1)
-      notify(`${deletedCount} order${deletedCount === 1 ? '' : 's'} deleted.`)
+      notify(`${archivedCount} order${archivedCount === 1 ? '' : 's'} archived.`)
     } catch (requestError) {
       setActionError(
         requestError instanceof ApiError
           ? requestError.message
-          : 'Could not delete the selected orders.',
+          : 'Could not archive the selected orders.',
       )
     } finally {
-      setDeleting(false)
+      setArchiving(false)
     }
   }
 
@@ -232,22 +232,22 @@ export function OrdersPage({
         {orders.length > 0 && (
           <button
             type="button"
-            className="button button-outline button-danger button-small order-bulk-delete"
-            disabled={loading || deleting}
+            className="button button-outline button-small order-bulk-delete"
+            disabled={loading || archiving}
             onClick={() => {
               setActionError('')
-              setDeleteConfirmation({
+              setArchiveConfirmation({
                 ids: orders.map((order) => order.id),
                 description: hasActiveFilters
-                  ? `Delete all ${orders.length} orders matching the current filters?`
-                  : `Delete all ${orders.length} orders?`,
+                  ? `Archive all ${orders.length} orders matching the current filters?`
+                  : `Archive all ${orders.length} orders?`,
               })
             }}
           >
-            <Trash2 size={14} />
+            <Archive size={14} />
             {hasActiveFilters
-              ? `Delete matching (${orders.length})`
-              : `Delete all (${orders.length})`}
+              ? `Archive matching (${orders.length})`
+              : `Archive all (${orders.length})`}
           </button>
         )}
       </div>
@@ -666,19 +666,19 @@ export function OrdersPage({
             )}
             <button
               type="button"
-              className="button button-danger button-outline"
-              disabled={deleting || workingId === selectedOrder.id}
+              className="button button-outline"
+              disabled={archiving || workingId === selectedOrder.id}
               onClick={() => {
                 setSelectedOrderId(null)
                 setActionError('')
-                setDeleteConfirmation({
+                setArchiveConfirmation({
                   ids: [selectedOrder.id],
-                  description: `Permanently delete order ${selectedOrder.number}?`,
+                  description: `Archive order ${selectedOrder.number}?`,
                 })
               }}
             >
-              <Trash2 size={15} />
-              Delete order
+              <Archive size={15} />
+              Archive order
             </button>
           </div>
         </Modal>
@@ -709,31 +709,30 @@ export function OrdersPage({
           onSaved={() => setRefreshKey((value) => value + 1)}
         />
       )}
-      {deleteConfirmation && (
+      {archiveConfirmation && (
         <Modal
-          title="Delete orders?"
-          subtitle="This action cannot be undone."
+          title="Archive orders?"
+          subtitle="Archived orders leave the active order list."
           onClose={() => {
-            if (!deleting) {
-              setDeleteConfirmation(null)
+            if (!archiving) {
+              setArchiveConfirmation(null)
               setActionError('')
             }
           }}
         >
-          <div className="order-delete-confirmation">
-            <p>{deleteConfirmation.description}</p>
+          <div className="order-archive-confirmation">
+            <p>{archiveConfirmation.description}</p>
             <p>
-              Orders with recorded payments cannot be deleted, to protect their
-              financial records.
+              Payment and receipt history will be retained.
             </p>
             {actionError && <ErrorState message={actionError} />}
             <div className="order-detail-actions">
               <button
                 type="button"
                 className="button button-outline"
-                disabled={deleting}
+                disabled={archiving}
                 onClick={() => {
-                  setDeleteConfirmation(null)
+                  setArchiveConfirmation(null)
                   setActionError('')
                 }}
               >
@@ -741,12 +740,12 @@ export function OrdersPage({
               </button>
               <button
                 type="button"
-                className="button button-danger button-outline"
-                disabled={deleting}
-                onClick={() => void removeOrders()}
+                className="button button-outline"
+                disabled={archiving}
+                onClick={() => void archiveOrders()}
               >
-                <Trash2 size={15} />
-                {deleting ? 'Deleting…' : 'Confirm delete'}
+                <Archive size={15} />
+                {archiving ? 'Archiving…' : 'Confirm archive'}
               </button>
             </div>
           </div>

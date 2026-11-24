@@ -5372,13 +5372,13 @@
   white-space: nowrap;
 }
 
-.order-delete-confirmation > p {
+.order-archive-confirmation > p {
   color: #627168;
   font-size: 13px;
   line-height: 1.55;
 }
 
-.order-delete-confirmation .error-state {
+.order-archive-confirmation .error-state {
   margin: 12px 0;
 }
 
