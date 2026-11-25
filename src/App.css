@@ -1358,6 +1358,76 @@
   background: #fcfdfc;
 }
 
+.support-tickets-table td {
+  vertical-align: top;
+}
+
+.support-tickets-table td:first-child {
+  min-width: 150px;
+}
+
+.support-ticket-customer {
+  display: grid;
+  min-width: 170px;
+  gap: 4px;
+}
+
+.support-ticket-customer strong,
+.support-ticket-message-cell strong {
+  color: #263d34;
+}
+
+.support-ticket-customer a {
+  color: #087d79;
+  text-decoration: none;
+}
+
+.support-ticket-customer small {
+  color: #87958d;
+}
+
+.support-tickets-table .support-ticket-message-cell {
+  min-width: 280px;
+  max-width: 560px;
+  white-space: normal;
+}
+
+.support-ticket-message-cell p {
+  margin: 7px 0 0;
+  color: #697970;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.support-ticket-email-status {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.support-ticket-email-sent {
+  background: #e7f5ed;
+  color: #18764b;
+}
+
+.support-ticket-email-failed {
+  background: #fff0e8;
+  color: #a64b20;
+}
+
+.support-ticket-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: #697970;
+  font-size: 12px;
+}
+
 .table-product {
   display: flex;
   min-width: 190px;

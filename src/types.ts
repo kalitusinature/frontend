@@ -117,6 +117,17 @@ export interface ChatMessage {
   created_at: string
 }
 
+export interface SupportTicket {
+  id: number
+  name: string
+  email: string
+  phone: string
+  subject: string
+  message: string
+  email_sent: boolean
+  created_at: string
+}
+
 export interface Reservation {
   id: number
   reference: string

@@ -4,6 +4,7 @@ import {
   CreditCard,
   Gauge,
   LogOut,
+  Mail,
   Menu,
   MessageCircle,
   ReceiptText,
@@ -19,6 +20,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LodgesPage } from './pages/LodgesPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { ChatPage } from './pages/ChatPage'
+import { SupportTicketsPage } from './pages/SupportTicketsPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { ReservationsPage } from './pages/ReservationsPage'
 import { PaymentReceiptsPage } from './pages/PaymentReceiptsPage'
@@ -34,6 +36,7 @@ export type PageId =
   | 'dashboard'
   | 'orders'
   | 'chats'
+  | 'support-tickets'
   | 'products'
   | 'reservations'
   | 'payment-receipts'
@@ -45,6 +48,7 @@ const navigation = [
   { id: 'dashboard', label: 'Dashboard', icon: Gauge },
   { id: 'orders', label: 'Orders', icon: ReceiptText },
   { id: 'chats', label: 'Customer chat', icon: MessageCircle },
+  { id: 'support-tickets', label: 'Support tickets', icon: Mail },
   { id: 'products', label: 'Menu products', icon: Salad },
   { id: 'reservations', label: 'Reservations', icon: CalendarDays },
   { id: 'payment-receipts', label: 'Payment receipts', icon: CreditCard },
@@ -437,6 +441,9 @@ function App() {
           )}
           {activePage === 'orders' && <OrdersPage {...pageProps} />}
           {activePage === 'chats' && <ChatPage {...pageProps} />}
+          {activePage === 'support-tickets' && (
+            <SupportTicketsPage token={token} />
+          )}
           {activePage === 'products' && <ProductsPage {...pageProps} />}
           {activePage === 'reservations' && <ReservationsPage {...pageProps} />}
           {activePage === 'payment-receipts' && (

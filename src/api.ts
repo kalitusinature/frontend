@@ -22,6 +22,7 @@ import type {
   StaffAccount,
   StaffCreateInput,
   StaffUser,
+  SupportTicket,
   TemporaryPasswordResponse,
 } from './types'
 
@@ -222,6 +223,13 @@ export const api = {
       method: 'POST',
       body: jsonBody({ body }),
     })
+  },
+  supportTickets(token: string, page = 1) {
+    const params = new URLSearchParams({ page: String(page) })
+    return request<Paginated<SupportTicket>>(
+      `/staff/support-tickets/?${params.toString()}`,
+      token,
+    )
   },
   orders(
     token: string,
