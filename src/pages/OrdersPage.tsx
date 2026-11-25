@@ -9,6 +9,7 @@ import {
   LoadingState,
   Modal,
   CancellationModal,
+  ResultsLoadingIndicator,
   StatusPill,
 } from '../components/ui'
 import { formatDateTime, formatUGX } from '../utils'
@@ -228,6 +229,7 @@ export function OrdersPage({
             }}
           />
         </label>
+        {loading && <ResultsLoadingIndicator label="Updating orders…" />}
         <span className="toolbar-count">{orders.length} orders</span>
         {orders.length > 0 && (
           <button

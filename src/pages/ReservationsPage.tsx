@@ -33,6 +33,7 @@ import {
   Modal,
   PageHeading,
   PageLoadingScreen,
+  ResultsLoadingIndicator,
   StatusPill,
 } from '../components/ui'
 import {
@@ -814,6 +815,7 @@ export function ReservationsPage({
         </FormField>
       </div>
       <div className="toolbar">
+        {loading && <ResultsLoadingIndicator label="Updating reservations…" />}
         <span className="toolbar-count">{count} reservation{count === 1 ? '' : 's'}</span>
         <span className="toolbar-count">Page {page} of {currentPageCount}</span>
       </div>

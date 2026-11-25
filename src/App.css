@@ -1722,6 +1722,19 @@
   font-size: 12px;
 }
 
+.results-loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #708176;
+  font-size: 11px;
+}
+
+.results-loading-indicator .spinner {
+  width: 14px;
+  height: 14px;
+}
+
 .spinner {
   width: 18px;
   height: 18px;

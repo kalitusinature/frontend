@@ -8,6 +8,7 @@ import {
   FormField,
   LoadingState,
   PageHeading,
+  ResultsLoadingIndicator,
   StatusPill,
 } from '../components/ui'
 import { formatDateTime, formatUGX } from '../utils'
@@ -213,6 +214,7 @@ export function PaymentReceiptsPage({
           />
         </FormField>
       </section>
+      {loading && <ResultsLoadingIndicator label="Updating payment receipts…" />}
       {error && (
         <ErrorState
           message={error}

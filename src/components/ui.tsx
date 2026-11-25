@@ -33,6 +33,15 @@ export function LoadingState({ label = 'Loading data…' }: { label?: string }) 
   )
 }
 
+export function ResultsLoadingIndicator({ label = 'Updating results…' }: { label?: string }) {
+  return (
+    <div className="results-loading-indicator" role="status" aria-live="polite">
+      <span className="spinner" aria-hidden="true" />
+      <span>{label}</span>
+    </div>
+  )
+}
+
 export function PageLoadingScreen({ label, delay = 350 }: { label: string; delay?: number }) {
   const [visible, setVisible] = useState(delay === 0)
   const [serverWaking, setServerWaking] = useState(false)
