@@ -199,6 +199,7 @@ export interface PaymentRecordInput {
 export interface PaymentRecordResponse extends PaymentReceipt {
   email_available: boolean
   email_sent: boolean
+  review_email_sent: boolean | null
 }
 
 export interface LodgeBlockout {

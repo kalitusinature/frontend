@@ -490,6 +490,12 @@ export function ReservationsPage({
           <span>Paid <strong>{formatUGX(reservation.amount_paid_ugx)}</strong></span>
           <span>Balance <strong>{formatUGX(reservation.balance_ugx)}</strong></span>
         </div>
+        {reservation.total_due_ugx === 0 &&
+          !['declined', 'cancelled'].includes(reservation.status) && (
+            <p className="reservation-payment-hint">
+              Set the total due in Edit details before recording payment. The review invitation is emailed after check-out and full payment.
+            </p>
+          )}
         {(reservation.occasion || reservation.note) && (
           <p className="reservation-note">
             {reservation.occasion && <strong>{reservation.occasion}: </strong>}

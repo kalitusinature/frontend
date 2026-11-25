@@ -1301,6 +1301,13 @@
   color: #34483c;
 }
 
+.reservation-payment-hint {
+  margin: 8px 0 0;
+  color: #718078;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .reservation-note {
   margin: 12px 0 0;
   color: #9c7d61;

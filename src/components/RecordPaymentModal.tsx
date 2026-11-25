@@ -60,13 +60,20 @@ export function RecordPaymentModal({
         method,
         transaction_reference: transactionReference.trim(),
       })
+      const messages = ['Payment verified.']
       if (payment.email_sent) {
-        notify(`Payment verified. Receipt ${payment.receipt_number} was emailed.`)
+        messages.push(`Receipt ${payment.receipt_number} was emailed.`)
       } else if (!payment.email_available) {
-        notify('Payment verified. No customer email is on file; the receipt is saved for download.')
+        messages.push('No customer email is on file; the receipt is saved for download.')
       } else {
-        notify('Payment verified, but receipt email delivery failed. Retry it from Payment Receipts.')
+        messages.push('Receipt email failed; retry it from Payment Receipts.')
       }
+      if (payment.review_email_sent === true) {
+        messages.push('The customer review invitation was also emailed.')
+      } else if (payment.review_email_sent === false && payment.email_available) {
+        messages.push('The review invitation email could not be delivered.')
+      }
+      notify(messages.join(' '))
       onSaved()
       onClose()
     } catch (requestError) {
