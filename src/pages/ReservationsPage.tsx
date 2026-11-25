@@ -534,6 +534,18 @@ export function ReservationsPage({
           >
             <Pencil size={15} /> Edit details
           </button>
+          {['pending', 'confirmed'].includes(reservation.status) && (
+            <button
+              className="button button-outline button-danger"
+              disabled={workingId === reservation.id}
+              onClick={() => {
+                setActionError('')
+                setCancellationReservation(reservation)
+              }}
+            >
+              <Ban size={15} /> Cancel
+            </button>
+          )}
           {reservation.status === 'pending' && (
             <>
               <button
@@ -554,16 +566,6 @@ export function ReservationsPage({
           )}
           {reservation.status === 'confirmed' && (
             <>
-              <button
-                className="button button-outline button-danger"
-                disabled={workingId === reservation.id}
-                onClick={() => {
-                  setActionError('')
-                  setCancellationReservation(reservation)
-                }}
-              >
-                <Ban size={15} /> Cancel
-              </button>
               <button
                 className="button button-primary button-small"
                 disabled={workingId === reservation.id}

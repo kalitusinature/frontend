@@ -207,7 +207,10 @@ export function CancellationModal({
       >
         <div className="cancellation-notice">
           <AlertTriangle size={18} aria-hidden="true" />
-          <p>This action will be recorded. Enter a reason to continue.</p>
+          <p>
+            This action will be recorded, and the reason will be included in the
+            cancellation email. Enter a reason to continue.
+          </p>
         </div>
         <FormField label="Reason (required)">
           <textarea
