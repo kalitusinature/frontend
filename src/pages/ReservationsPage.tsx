@@ -121,9 +121,11 @@ export function ReservationsPage({
   const [page, setPage] = useState(1)
   const [workingId, setWorkingId] = useState<number | null>(null)
   const [cancellationReservation, setCancellationReservation] = useState<Reservation | null>(null)
+  const [deletingReservation, setDeletingReservation] = useState<Reservation | null>(null)
   const [paymentReservation, setPaymentReservation] = useState<Reservation | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [actionError, setActionError] = useState('')
+  const [deleteError, setDeleteError] = useState('')
   const [lodges, setLodges] = useState<Lodge[]>([])
   const [lodgeError, setLodgeError] = useState('')
   const [editing, setEditing] = useState<Reservation | null>(null)
@@ -367,16 +369,18 @@ export function ReservationsPage({
     if (updated) setCancellationReservation(null)
   }
 
-  const deleteReservation = async (reservation: Reservation) => {
-    if (!window.confirm(`Permanently delete reservation ${reservation.reference}?`)) return
+  const confirmDeleteReservation = async () => {
+    if (!deletingReservation) return
+    const reservation = deletingReservation
     setWorkingId(reservation.id)
-    setActionError('')
+    setDeleteError('')
     try {
       await api.deleteReservation(token, reservation.id)
       setRefreshKey((value) => value + 1)
       notify(`Reservation ${reservation.reference} deleted.`)
+      setDeletingReservation(null)
     } catch (requestError) {
-      setActionError(
+      setDeleteError(
         requestError instanceof ApiError
           ? requestError.message
           : 'Could not delete this reservation.',
@@ -581,7 +585,10 @@ export function ReservationsPage({
             <button
               className="button button-outline button-danger"
               disabled={workingId === reservation.id}
-              onClick={() => void deleteReservation(reservation)}
+              onClick={() => {
+                setDeleteError('')
+                setDeletingReservation(reservation)
+              }}
             >
               <Trash2 size={15} /> Delete
             </button>
@@ -1023,6 +1030,42 @@ export function ReservationsPage({
           }}
           onConfirm={(reason) => void cancelReservation(reason)}
         />
+      )}
+      {deletingReservation && (
+        <Modal
+          className="cancellation-modal"
+          title={`Permanently delete reservation ${deletingReservation.reference}?`}
+          subtitle="This action cannot be undone."
+          onClose={() => {
+            if (workingId !== deletingReservation.id) {
+              setDeletingReservation(null)
+              setDeleteError('')
+            }
+          }}
+        >
+          <div className="cancellation-form">
+            {deleteError && <div className="form-error" role="alert">{deleteError}</div>}
+            <div className="cancellation-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                autoFocus
+                disabled={workingId === deletingReservation.id}
+                onClick={() => setDeletingReservation(null)}
+              >
+                Keep reservation
+              </button>
+              <button
+                type="button"
+                className="button button-danger button-outline"
+                disabled={workingId === deletingReservation.id}
+                onClick={() => void confirmDeleteReservation()}
+              >
+                {workingId === deletingReservation.id ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
       {paymentReservation && (
         <RecordPaymentModal
