@@ -497,7 +497,7 @@ export function ReservationsPage({
         {reservation.total_due_ugx === 0 &&
           !['declined', 'cancelled'].includes(reservation.status) && (
             <p className="reservation-payment-hint">
-              Set the total due in Edit details before recording payment. The review invitation is emailed after check-out and full payment.
+              Set the total due in Edit details before recording payment. The review invitation is emailed after check-out, regardless of payment.
             </p>
           )}
         {(reservation.occasion || reservation.note) && (
