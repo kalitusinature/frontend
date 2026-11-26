@@ -19,12 +19,13 @@ function isAppInstalled(): boolean {
 export function InstallAppButton() {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
   const [showInstallModal, setShowInstallModal] = useState(false)
-  const [showIosInstructions, setShowIosInstructions] = useState(false)
+  const [showInstallInstructions, setShowInstallInstructions] = useState(false)
   const [installError, setInstallError] = useState('')
   const [installed, setInstalled] = useState(isAppInstalled)
   const isIos =
     /iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const isAndroid = /Android/i.test(navigator.userAgent)
 
   useEffect(() => {
     const handleInstallPrompt = (event: Event) => {
@@ -59,7 +60,7 @@ export function InstallAppButton() {
 
   const install = async () => {
     if (!installPrompt) {
-      setShowIosInstructions(true)
+      setShowInstallInstructions(true)
       return
     }
 
@@ -79,15 +80,17 @@ export function InstallAppButton() {
 
   return (
     <>
-      {(installPrompt || isIos) && (
+      {!installed && (installPrompt || isIos || isAndroid) && (
         <div className="install-app">
           <button className="button button-outline button-small" onClick={() => void install()}>
             <Download size={15} />
             Install app
           </button>
-          {isIos && showIosInstructions && (
+          {(isIos || isAndroid) && showInstallInstructions && (
             <span className="install-instructions" role="status">
-              In Safari, tap Share, then choose Add to Home Screen.
+              {isIos
+                ? 'In Safari, tap Share, then choose Add to Home Screen.'
+                : 'In Chrome, choose Install app from the menu, not Create shortcut. Remove any existing shortcut and install again.'}
             </span>
           )}
         </div>
@@ -124,8 +127,18 @@ export function InstallAppButton() {
             )}
             {!isIos && !installPrompt && (
               <p className="install-modal-instructions">
-                Open your browser menu and choose <strong>Install app</strong> or{' '}
-                <strong>Add to Home Screen</strong>.
+                {isAndroid ? (
+                  <>
+                    In Chrome, open the menu and choose <strong>Install app</strong>, not{' '}
+                    <strong>Create shortcut</strong>. If you already added a shortcut, remove it
+                    and install the app again.
+                  </>
+                ) : (
+                  <>
+                    Open your browser menu and choose <strong>Install app</strong>, not{' '}
+                    <strong>Create shortcut</strong>.
+                  </>
+                )}
               </p>
             )}
             {installError && <p className="form-error">{installError}</p>}
