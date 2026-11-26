@@ -89,7 +89,7 @@ export function InstallAppButton() {
           {(isIos || isAndroid) && showInstallInstructions && (
             <span className="install-instructions" role="status">
               {isIos
-                ? 'In Safari, tap Share, then choose Add to Home Screen.'
+                ? 'Open in Safari. Tap Share, then Add to Home Screen. Turn on Open as Web App if shown; remove any old shortcut first.'
                 : 'In Chrome, choose Install app from the menu, not Create shortcut. Remove any existing shortcut and install again.'}
             </span>
           )}
@@ -121,8 +121,10 @@ export function InstallAppButton() {
             </p>
             {isIos && (
               <p className="install-modal-instructions">
-                In Safari, tap <strong>Share</strong>, then choose{' '}
-                <strong>Add to Home Screen</strong>.
+                Open this page in <strong>Safari</strong>, tap <strong>Share</strong>, then choose{' '}
+                <strong>Add to Home Screen</strong>. If shown, turn on{' '}
+                <strong>Open as Web App</strong> before tapping Add. Remove any existing browser
+                shortcut and install it this way.
               </p>
             )}
             {!isIos && !installPrompt && (

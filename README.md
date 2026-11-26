@@ -19,9 +19,11 @@ environment file.
 
 Deploy the app over HTTPS, then open it in a mobile browser. Android browsers
 show an **Install app** action when the app is eligible; on iPhone or iPad, open
-the app in Safari, tap **Share**, and choose **Add to Home Screen**. The app
-shell and static assets are available offline after the first visit, but staff
-sign-in and resort data still require a connection to the API.
+the app in Safari, tap **Share**, and choose **Add to Home Screen**. If Safari
+shows an **Open as Web App** option, turn it on before adding. Remove any
+existing browser shortcut and add the app from Safari to launch it standalone.
+The app shell and static assets are available offline after the first visit,
+but staff sign-in and resort data still require a connection to the API.
 
 After 30 minutes in the signed-in portal, an install reminder appears if the
 app is not installed. To enable background push, each staff member selects
